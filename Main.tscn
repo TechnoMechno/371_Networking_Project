@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://qq3saxq350l5"]
+
+[ext_resource type="PackedScene" uid="uid://cqsasqpjuq6h6" path="res://pancake.tscn" id="1_1ifny"]
+
+[node name="Main" type="Node2D"]
+
+[node name="Pancake" parent="." instance=ExtResource("1_1ifny")]
+position = Vector2(908, 510)
