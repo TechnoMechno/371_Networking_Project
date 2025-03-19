@@ -27,7 +27,7 @@ def broadcast_tcp(message):
 
 def broadcast_udp(message):
     """Send a message to all players via UDP."""
-    for addr in list(udp_connections.values()):
+    for addr in list(udp_connections.keys()):
         try:
             udp_socket.sendto(message.encode(), addr)
         except Exception as e:
@@ -94,15 +94,16 @@ def udp_server():
             continue
 
         elif msg == "cookie":
+            print(f"Received data form {addr}")
             score += 1
             print("Cookie collected! New score:", score)
             broadcast_udp(f"Score: {score}")
             continue
 
         # Register new UDP addresses if not already registered.
-        if addr not in udp_connections.values():
-            player_id = f"player{len(udp_connections) + 1}"
-            udp_connections[player_id] = addr
+        if addr not in udp_connections.keys():
+            player_id = f"player{len(udp_connections) + 2}"
+            udp_connections[addr] = player_id
             print(f"Added {player_id} with address {addr} to UDP connections.")
 
         broadcast_udp(data.decode())
