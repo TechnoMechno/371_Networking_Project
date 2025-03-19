@@ -1,10 +1,44 @@
-# server.py
+# Multiplayer Game Server
 
 The first player will act as the server so we do not need a dedicated server,
 then the other players will be clients.
 
 When a client has a message that needs to be broadcasted, 
 it will first send to the server first, and the the server will deal with the broadcasting.
+
+## Project Files 
+- `server.py`: main server script handling player connections, game logic, and message broadcasting, also the very first player.
+- `shared.py`: contains shared definitions to be used across both server and clients
+- `cookie_game.py` (not being used right now): to hold the actual cookie game that can be used throughout the players
+
+## How to Run
+
+### Running the server (first player)
+
+Start the server by executing:
+```bash 
+python server.py
+```
+
+The clients (currently in the root directory) can also be run by:
+```bash
+python client.py
+``` 
+after switching to root directory.
+
+## Game Flow
+
+### Lobby Phase (TCP)
+- Players join and leave lobby using TCP
+- Must have at least two players to start the game
+
+### Game Phase (UDP)
+- Real-time interactions using UDP
+- (Temporarily to test networking with the actual game aspect) Players collect cookies to increase the global score
+
+### How to Play
+(Temporarily)
+Press space and watch funny number to up.
 
 ## Networking Functions Summary
 

@@ -1,6 +1,7 @@
 import socket
 import threading
-from shared import GameState, game_state  # Assumes GameState has WAITING and IN_PROGRESS
+import pygame
+from shared import GameState, game_state  # Assumes GameState and game_state are defined in shared.py
 
 MAX_PLAYERS = 4
 HOST = 'localhost'
@@ -12,29 +13,31 @@ numOfPlayers = 1
 connections = []        # List of TCP connections
 udp_connections = {}    # Dictionary to store client UDP addresses
 score = 0               # Global score
-
+running = True          # Global flag to control loops
 
 def broadcast_tcp(message):
     """Send a message to all players via TCP."""
-    for conn in connections:
+    for conn in connections[:]:
         try:
             conn.send(message.encode())
-        except:
-            connections.remove(conn)
+        except Exception as e:
+            print("TCP broadcast error:", e)
+            if conn in connections:
+                connections.remove(conn)
 
 def broadcast_udp(message):
     """Send a message to all players via UDP."""
-    for addr in udp_connections.values():
+    for addr in list(udp_connections.values()):
         try:
             udp_socket.sendto(message.encode(), addr)
-        except:
-            pass
+        except Exception as e:
+            print("UDP broadcast error:", e)
 
 def handle_client(conn, addr):
     """Handles player connections in the TCP lobby."""
     global numOfPlayers, game_state
-    player_id = f"player{numOfPlayers}"
     numOfPlayers += 1
+    player_id = f"player{numOfPlayers}"
     connections.append(conn)
     
     join_msg = f"{player_id} has joined the lobby."
@@ -47,9 +50,9 @@ def handle_client(conn, addr):
             # If recv returns an empty string, the client has disconnected.
             if not msg or msg.lower() == 'quit':
                 break
-    except ConnectionResetError:
-        # This exception occurs if the client disconnects unexpectedly.
-        pass
+    except Exception as e:
+        # Log any error (e.g., ConnectionResetError when client abruptly disconnects)
+        print(f"Error with {player_id}: {e}")
     finally:
         numOfPlayers -= 1
         if conn in connections:
@@ -60,32 +63,36 @@ def handle_client(conn, addr):
         print(disconnect_msg)
         broadcast_tcp(disconnect_msg)
 
-        # if the game is in progress and there are new fewer than 2 players,
-        # then end the game 
+        # If the game is in progress and there are now fewer than 2 players, end the game.
         if game_state == GameState.IN_PROGRESS and numOfPlayers < 2:
-            print("Not enough players, Ending game...")
-            broadcast_tcp("Game ended due to disconnection. ")
+            print("Not enough players, ending game...")
+            broadcast_tcp("Game ended due to disconnection.")
             game_state = GameState.WAITING
-
 
 def udp_server():
     """Handles UDP communication during game mode."""
-    global udp_socket, game_state, score
+    global udp_socket, game_state, score, running
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind((HOST, UDP_PORT))
+    udp_socket.settimeout(1.0)  # Use a timeout to allow periodic checks of the running flag
 
-    while True:
-        data, addr = udp_socket.recvfrom(1024)
+    while running:
+        try:
+            data, addr = udp_socket.recvfrom(1024)
+        except socket.timeout:
+            continue
+        except Exception as e:
+            print("UDP server error:", e)
+            break
+
         msg = data.decode().strip().lower()
 
-        # If any UDP client sends 'quit', end game mode.
         if msg == "quit":
             print("Received UDP 'quit' – ending game, back to TCP lobby.")
             broadcast_tcp("Game ended. Back to lobby.")
             game_state = GameState.WAITING
             continue
 
-        # If a "cookie" is received, update score and broadcast.
         elif msg == "cookie":
             score += 1
             print("Cookie collected! New score:", score)
@@ -98,13 +105,20 @@ def udp_server():
             udp_connections[player_id] = addr
             print(f"Added {player_id} with address {addr} to UDP connections.")
 
-        # Relay any other UDP message normally.
         broadcast_udp(data.decode())
 
 def accept_clients(server_socket):
     """Accepts TCP client connections; disconnects new clients if maximum reached."""
-    while True:
-        conn, addr = server_socket.accept()
+    global running
+    server_socket.settimeout(1.0)
+    while running:
+        try:
+            conn, addr = server_socket.accept()
+        except socket.timeout:
+            continue
+        except Exception as e:
+            print("TCP accept error:", e)
+            break
         if numOfPlayers < MAX_PLAYERS:
             threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
         else:
@@ -116,40 +130,73 @@ def accept_clients(server_socket):
             conn.close()
 
 def server():
-    global game_state, numOfPlayers, score
+    global game_state, numOfPlayers, score, running
+    # Initialize Pygame window for the server
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Server Game Window")
+    clock = pygame.time.Clock()
+    font = pygame.font.Font(None, 36)
+
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, TCP_PORT))
     server_socket.listen(MAX_PLAYERS)
     
     print("Server is running. Waiting for players...")
 
-    # Start the UDP thread.
+    # Start the UDP and TCP threads.
     threading.Thread(target=udp_server, daemon=True).start()
-    # Start accepting TCP clients.
     threading.Thread(target=accept_clients, args=(server_socket,), daemon=True).start()
 
-    # Main loop: lobby (TCP) and game mode (UDP) control.
-    while True:
-        if game_state == GameState.WAITING:
-            command = input("Type 'start' to begin the game: \n").strip().lower()
-            if command == "start":
-                if numOfPlayers < 2:
-                    print("Minimum amount of players is 2!")
-                else:
-                    print("Game has started")
-                    broadcast_tcp("Game has started")
-                    game_state = GameState.IN_PROGRESS
-        elif game_state == GameState.IN_PROGRESS:
-            command = input("Game in progress. Type 'cookie' to increase score or 'quit' to end the game: \n").strip().lower()
-            if command == "quit":
-                print("Ending game, back to TCP lobby.")
-                broadcast_udp("quit")  # Notify clients via UDP.
-                broadcast_tcp("Game ended. Back to lobby.")
-                game_state = GameState.WAITING
-            elif command == "cookie":
-                score += 1
-                print("Cookie collected from server! New score:", score)
-                broadcast_udp(f"Score: {score}")
+    try:
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    # In the lobby mode, press 's' to start the game (if enough players are connected)
+                    if game_state == GameState.WAITING:
+                        if event.key == pygame.K_s:
+                            if numOfPlayers < 2:
+                                print("Minimum amount of players is 2!")
+                            else:
+                                print("Game has started")
+                                broadcast_tcp("Game has started")
+                                game_state = GameState.IN_PROGRESS
+                    # In game mode, press SPACE to collect a cookie or 'q' to quit the game
+                    elif game_state == GameState.IN_PROGRESS:
+                        if event.key == pygame.K_SPACE:
+                            score += 1
+                            print("Cookie collected from server! New score:", score)
+                            broadcast_udp(f"Score: {score}")
+                        elif event.key == pygame.K_q:
+                            print("Ending game, back to TCP lobby.")
+                            broadcast_udp("quit")  # Notify clients via UDP.
+                            broadcast_tcp("Game ended. Back to lobby.")
+                            game_state = GameState.WAITING
+
+            # Update the Pygame window with current state and score.
+            screen.fill((50, 50, 50))
+            state_text = font.render(f"State: {game_state.value} | Players: {numOfPlayers} | Score: {score}", True, (255, 255, 255))
+            screen.blit(state_text, (20, 20))
+            if game_state == GameState.WAITING:
+                instruct_text = font.render("Press 's' to start game (min 2 players)", True, (255, 255, 255))
+            else:
+                instruct_text = font.render("Press SPACE for cookie, 'q' to quit game", True, (255, 255, 255))
+            screen.blit(instruct_text, (20, 60))
+            pygame.display.flip()
+            clock.tick(60)
+
+    except KeyboardInterrupt:
+        print("Server shutting down due to KeyboardInterrupt.")
+    finally:
+        running = False
+        # Close all client connections and server socket
+        for conn in connections:
+            conn.close()
+        server_socket.close()
+        pygame.quit()
+        print("Server closed.")
 
 if __name__ == '__main__':
     server()
