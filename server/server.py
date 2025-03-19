@@ -3,76 +3,77 @@ import threading
 from game_state import GameState
 
 MAX_PLAYERS = 4
-numOfPlayers = 1  # Server is Player 1
-player_numbers = {}  # Maps client sockets to player numbers
-connections = []  # List of active client sockets
+numOfPlayers = 1
+connections = []  
 game_state = GameState.WAITING
 
 HOST = 'localhost'
 PORT = 5555 
 
-def broadcast(message, sender_conn=None):
-    """Sends a message to all clients except the sender (if specified)."""
+def broadcast(message):
+    """Send a message to all players."""
     for conn in connections:
         try:
             conn.send(message.encode())
         except:
-            connections.remove(conn)  
-
-def check_game_start():
-    """ Check if the game should start """
-    global game_state 
-    if numOfPlayers == MAX_PLAYERS and game_state == GameState.WAITING:
-        game_state = GameState.IN_PROGRESS
-        broadcast("The game has started!")
-
+            connections.remove(conn)
 
 def handle_client(conn, addr):
-    """Handles communication with a single client."""
+    """Handles player connections."""
     global numOfPlayers
-
     numOfPlayers += 1
-    player_numbers[conn] = numOfPlayers
-    connections.append(conn)  # Store the connection
-    print(f"Player {numOfPlayers} has joined! Total players: {numOfPlayers}")
+    connections.append(conn)
 
-    broadcast(f"Player {numOfPlayers} has joined the game!")
+    print(f"Player {numOfPlayers} joined! Waiting for game to start.")
+    broadcast(f"Player {numOfPlayers} has joined!")
 
     try:
         while True:
             msg = conn.recv(1024).decode().strip()
             if not msg or msg.lower() == 'quit':
                 break
-            print(f"Player {player_numbers[conn]}: {msg}")
-            broadcast(f"Player {player_numbers[conn]}: {msg}", sender_conn=conn)
     except ConnectionResetError:
-        pass  # Handle abrupt disconnection
+        pass
 
-    # Remove player from the game
-    print(f"Player {player_numbers[conn]} disconnected! Total players: {numOfPlayers - 1}")
-    broadcast(f"Player {player_numbers[conn]} has left the game!")
-
-    connections.remove(conn)
-    del player_numbers[conn]
     numOfPlayers -= 1
+    connections.remove(conn)
     conn.close()
 
 def server():
-    """TCP Server for handling multiple clients."""
-    global numOfPlayers
+    global game_state
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, PORT))
     server_socket.listen(MAX_PLAYERS)
     
-    print("Welcome, you are Player 1!")
+    print("Server is running. Waiting for players...")
 
+    threading.Thread(target=accept_clients, args=(server_socket,), daemon=True).start()
+
+    while True:
+        if (game_state == game_state.WAITING):
+            command = input("Type 'start' to begin the game: \n").strip().lower()
+            if command == "start":
+                if numOfPlayers == 1:
+                    print("Minimum amount of players is 2!")
+                else:
+                    print("Game has started")  
+                    broadcast("Game has started")  
+                    game_state = GameState.IN_PROGRESS
+        # TODO: handle other game_states
+            
+
+def accept_clients(server_socket):
+    """Accept multiple client connections and disconnect new clients if maximum reached."""
     while True:
         conn, addr = server_socket.accept()
         if numOfPlayers < MAX_PLAYERS:
-            thread = threading.Thread(target=handle_client, args=(conn, addr), daemon=True)
-            thread.start()
+            threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
         else:
-            conn.send("Server full! Try again later.".encode())
+            print(f"Too many players connected! Disconnecting client {addr}")
+            try:
+                conn.send("Server is full. Please try again later.".encode())
+            except Exception as e:
+                print(f"Error sending full-server message: {e}")
             conn.close()
 
 if __name__ == '__main__':

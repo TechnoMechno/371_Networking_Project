@@ -6,7 +6,9 @@ then the other players will be clients.
 When a client has a message that needs to be broadcasted, 
 it will first send to the server first, and the the server will deal with the broadcasting.
 
-## Functions Overview
+## Networking Functions Summary
+
+Purely definitions for each of the networking functions used.
 
 ### socket.socket(...)
 ```python
