@@ -31,27 +31,34 @@ def broadcast_udp(message):
             pass
 
 def handle_client(conn, addr):
-    """Handles player connections via TCP (lobby phase)."""
+    """Handles player connections in the TCP lobby."""
     global numOfPlayers
     player_id = f"player{numOfPlayers}"
     numOfPlayers += 1
     connections.append(conn)
-
-    print(f"Player {numOfPlayers} joined! Waiting for game to start.")
-    broadcast_tcp(f"Player {numOfPlayers} has joined!")
+    
+    join_msg = f"{player_id} has joined the lobby."
+    print(join_msg)
+    broadcast_tcp(join_msg)
 
     try:
         while True:
             msg = conn.recv(1024).decode().strip()
+            # If recv returns an empty string, the client has disconnected.
             if not msg or msg.lower() == 'quit':
                 break
-            # Additional TCP lobby messaging can be processed here.
     except ConnectionResetError:
+        # This exception occurs if the client disconnects unexpectedly.
         pass
+    finally:
+        numOfPlayers -= 1
+        connections.remove(conn)
+        conn.close()
+        
+        disconnect_msg = f"{player_id} has disconnected."
+        print(disconnect_msg)
+        broadcast_tcp(disconnect_msg)
 
-    numOfPlayers -= 1
-    connections.remove(conn)
-    conn.close()
 
 def udp_server():
     """Handles UDP communication during game mode."""
