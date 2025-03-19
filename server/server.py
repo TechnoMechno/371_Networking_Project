@@ -12,7 +12,8 @@ UDP_PORT = 5556
 numOfPlayers = 1
 connections = []        # List of TCP connections
 udp_connections = {}    # Dictionary to store client UDP addresses
-score = 0               # Global score
+scores = {} 
+# score = 0               # Global score
 running = True          # Global flag to control loops
 
 def broadcast_tcp(message):
@@ -71,7 +72,7 @@ def handle_client(conn, addr):
 
 def udp_server():
     """Handles UDP communication during game mode."""
-    global udp_socket, game_state, score, running
+    global udp_socket, game_state, scores, running
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind((HOST, UDP_PORT))
     udp_socket.settimeout(1.0)  # Use a timeout to allow periodic checks of the running flag
@@ -94,16 +95,17 @@ def udp_server():
             continue
 
         elif msg == "cookie":
-            print(f"Received data form {addr}")
-            score += 1
-            print("Cookie collected! New score:", score)
-            broadcast_udp(f"Score: {score}")
+            print(f"Received data form ", udp_connections[addr])
+            scores[addr] += 1   # Add score to the one who pressed it, so it's not a global score.
+            print(f"Cookie collected from {addr} ! New score:", scores[addr])
+            broadcast_udp(f"Score: {scores[addr]}")
             continue
 
         # Register new UDP addresses if not already registered.
         if addr not in udp_connections.keys():
             player_id = f"player{len(udp_connections) + 2}"
             udp_connections[addr] = player_id
+            scores[addr] = 0        # Initialize the score to be 0 first.
             print(f"Added {player_id} with address {addr} to UDP connections.")
 
         broadcast_udp(data.decode())
@@ -178,7 +180,7 @@ def server():
 
             # Update the Pygame window with current state and score.
             screen.fill((50, 50, 50))
-            state_text = font.render(f"State: {game_state.value} | Players: {numOfPlayers} | Score: {score}", True, (255, 255, 255))
+            state_text = font.render(f"State: {game_state.value} | Players: {numOfPlayers}", True, (255, 255, 255))
             screen.blit(state_text, (20, 20))
             if game_state == GameState.WAITING:
                 instruct_text = font.render("Press 's' to start game (min 2 players)", True, (255, 255, 255))
