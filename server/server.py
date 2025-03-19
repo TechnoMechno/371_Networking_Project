@@ -1,21 +1,42 @@
 import socket
 import threading
+from game_state import GameState
 
 MAX_PLAYERS = 4
 numOfPlayers = 1  # Server is Player 1
 player_numbers = {}  # Maps client sockets to player numbers
+connections = []  # List of active client sockets
+game_state = GameState.WAITING
 
 HOST = 'localhost'
-PORT = 5555  # Any available port
+PORT = 5555 
+
+def broadcast(message, sender_conn=None):
+    """Sends a message to all clients except the sender (if specified)."""
+    for conn in connections:
+        try:
+            conn.send(message.encode())
+        except:
+            connections.remove(conn)  
+
+def check_game_start():
+    """ Check if the game should start """
+    global game_state 
+    if numOfPlayers == MAX_PLAYERS and game_state == GameState.WAITING:
+        game_state = GameState.IN_PROGRESS
+        broadcast("The game has started!")
+
 
 def handle_client(conn, addr):
     """Handles communication with a single client."""
     global numOfPlayers
 
-    # Assign a player number and announce the new player
     numOfPlayers += 1
     player_numbers[conn] = numOfPlayers
+    connections.append(conn)  # Store the connection
     print(f"Player {numOfPlayers} has joined! Total players: {numOfPlayers}")
+
+    broadcast(f"Player {numOfPlayers} has joined the game!")
 
     try:
         while True:
@@ -23,12 +44,15 @@ def handle_client(conn, addr):
             if not msg or msg.lower() == 'quit':
                 break
             print(f"Player {player_numbers[conn]}: {msg}")
-            conn.send(f"Player {player_numbers[conn]} said: {msg}".encode())
+            broadcast(f"Player {player_numbers[conn]}: {msg}", sender_conn=conn)
     except ConnectionResetError:
         pass  # Handle abrupt disconnection
 
     # Remove player from the game
     print(f"Player {player_numbers[conn]} disconnected! Total players: {numOfPlayers - 1}")
+    broadcast(f"Player {player_numbers[conn]} has left the game!")
+
+    connections.remove(conn)
     del player_numbers[conn]
     numOfPlayers -= 1
     conn.close()

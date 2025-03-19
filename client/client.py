@@ -11,7 +11,7 @@ def receive_messages(client_socket):
             msg = client_socket.recv(1024).decode()
             if not msg:
                 break
-            print(f"\n[Server]: {msg}")
+            print(msg);
         except:
             break
 
