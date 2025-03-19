@@ -6,3 +6,6 @@ class GameState(Enum):
     IN_PROGRESS = "in_progress"
     DISPLAY_RESULTS = "display_results"
     GAME_OVER = "game_over"
+
+clients = []                        # List of tuples: (name, ip, udp_port) 
+game_state = GameState.WAITING
