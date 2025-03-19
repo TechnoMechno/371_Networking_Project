@@ -1,6 +1,6 @@
 import socket
 import threading
-from shared import GameState, clients, game_state  # Assumes GameState has WAITING and IN_PROGRESS
+from shared import GameState, game_state  # Assumes GameState has WAITING and IN_PROGRESS
 
 MAX_PLAYERS = 4
 HOST = 'localhost'
@@ -32,7 +32,7 @@ def broadcast_udp(message):
 
 def handle_client(conn, addr):
     """Handles player connections in the TCP lobby."""
-    global numOfPlayers
+    global numOfPlayers, game_state
     player_id = f"player{numOfPlayers}"
     numOfPlayers += 1
     connections.append(conn)
@@ -52,12 +52,20 @@ def handle_client(conn, addr):
         pass
     finally:
         numOfPlayers -= 1
-        connections.remove(conn)
+        if conn in connections:
+            connections.remove(conn)
         conn.close()
         
         disconnect_msg = f"{player_id} has disconnected."
         print(disconnect_msg)
         broadcast_tcp(disconnect_msg)
+
+        # if the game is in progress and there are new fewer than 2 players,
+        # then end the game 
+        if game_state == GameState.IN_PROGRESS and numOfPlayers < 2:
+            print("Not enough players, Ending game...")
+            broadcast_tcp("Game ended due to disconnection. ")
+            game_state = GameState.WAITING
 
 
 def udp_server():
