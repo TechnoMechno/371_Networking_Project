@@ -1,9 +1,11 @@
-# player.py
 class Player:
     def __init__(self, name):
         self.name = name
         self.score = 0
-    
-    # Placeholder for future grabbing logic
+
     def grab_cookie(self, cookie):
-        pass  # To be implemented later
+        # Award points based on cookie type
+        if cookie.type == "star":
+            self.score += 2
+        else:
+            self.score += 1
