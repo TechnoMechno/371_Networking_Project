@@ -1,16 +1,16 @@
-# pancake.py
+# cookie.py
 import pygame
 from config import *
 
-class Pancake:
+class Cookie:
     def __init__(self, position, type="regular"):
         self.position = list(position)
         self.type = type
         try:
-            image_path = REGULAR_PANCAKE_IMAGE if self.type == "regular" else STAR_PANCAKE_IMAGE
+            image_path = REGULAR_COOKIE_IMAGE if self.type == "regular" else STAR_COOKIE_IMAGE
             self.image = pygame.image.load(image_path).convert_alpha()
-            # Use smoothscale instead of scale for better quality
-            self.image = pygame.transform.smoothscale(self.image, (PANCAKE_SIZE, PANCAKE_SIZE))
+            # Scale the image to COOKIE_SIZE
+            self.image = pygame.transform.smoothscale(self.image, (COOKIE_SIZE, COOKIE_SIZE))
         except pygame.error as e:
             print(f"Error loading image: {e}")
             pygame.quit()
@@ -33,4 +33,4 @@ class Pancake:
             self.rect.center = self.position
     
     def draw(self, screen):
-        screen.blit(self.image, self.rect)
+        screen.blit(self.image, self.rect)  # Draw the image at the rect position

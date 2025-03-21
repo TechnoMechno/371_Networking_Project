@@ -1,6 +1,6 @@
 import pygame
 from config import *
-from Pancake import Pancake
+from cookie import Pancake
 # from player import Player  # Not used in this prototype
 from ui import draw_pancakes, draw_plate  # draw_scores removed for now
 
