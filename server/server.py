@@ -32,7 +32,7 @@ def broadcast_udp(message):
         try:
             udp_socket.sendto(message.encode(), addr)
         except Exception as e:
-            print("UDP broadcast error:", e)
+            print("UDP broadcast error:", e) 
 
 def handle_client(conn, addr):
     """Handles player connections in the TCP lobby."""

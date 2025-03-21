@@ -83,24 +83,51 @@ def main():
     tcp_sock.connect((HOST, TCP_PORT))
     
     threading.Thread(target=tcp_receive, args=(tcp_sock,), daemon=True).start()
+
+
+    input_buffer = []
+
+    # Thread for collecting input without blocking the main thread
+    def input_thread():
+        while not start_udp_mode:
+            try:
+                line = input()
+                input_buffer.append(line)
+            except EOFError:
+                break
+
+    # Start input collection
+    input_handler = threading.Thread(target=input_thread, daemon=True)
+    input_handler.start()
     
-    print("Connected via TCP. Waiting in lobby...")
     # Non-blocking lobby loop:
-    while True:
-        if start_udp_mode:
-            break
-        ready, _, _ = select.select([sys.stdin], [], [], 0.1)
-        if ready:
-            user_input = sys.stdin.readline().strip()
-            if user_input:
+    try:
+        while not start_udp_mode:
+            # Process any inputs collected by the input thread
+            if input_buffer:
+                user_input = input_buffer.pop(0)
                 try:
                     tcp_sock.send(user_input.encode())
+                    print(f"You sent: {user_input}")
                 except Exception as e:
-                    print("TCP send error:", e)
+                    print(f"TCP send error: {e}")
                     break
+                    
                 if user_input.lower() == "quit":
                     break
-    
+
+    except KeyboardInterrupt:
+        print("\nExiting...")
+    finally:
+        # Ensure sockets are properly closed
+        try:
+            tcp_sock.close()
+        except:
+            pass
+
+    if start_udp_mode:
+        udp_mode()
+                    
     tcp_sock.close()
     udp_mode()
     print("Disconnected from the server.")
