@@ -1,6 +1,7 @@
 # game.py
 import pygame
 import math
+import random
 from config import *
 from cookie import Cookie  # Changed from pancake import
 from player import Player
@@ -16,17 +17,21 @@ class Game:
         
         # Initialize game objects
         self.cookies = []
-        num_cookies = 8  # You can adjust this number
+        num_cookies = 50  # You can adjust this number
+        spread_radius = 150  # cookie spread
         
         # Calculate positions in a circle on the central plate
         for i in range(num_cookies):
             angle = 2 * math.pi * i / num_cookies
-            radius = 100  # Distance from center of plate
+            radius = spread_radius  # Distance from center of plate
+            r = radius * math.sqrt(random.random())
+            theta = random.uniform(0, 2 * math.pi)
             
-            # Position cookies in a circle on the central plate
+            # Position cookies in random positions on the central plate
             self.central_plate = Plate(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 260)
-            x = self.central_plate.x + radius * math.cos(angle)
-            y = self.central_plate.y + radius * math.sin(angle)
+            
+            x = self.central_plate.x + r * math.cos(theta)
+            y = self.central_plate.y + r * math.sin(theta)
             
             # Alternate between regular and star cookies
             cookie_type = "star" if i % 2 == 0 else "regular"
@@ -69,7 +74,7 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             if not self.game_over:
-                for cookie in self.cookies:
+                for cookie in reversed(self.cookies):
                     cookie.handle_event(event, self.player_plates, self.players)
 
     def update(self):
