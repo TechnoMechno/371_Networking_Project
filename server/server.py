@@ -9,11 +9,10 @@ TCP_PORT = 5555
 UDP_PORT = 5556
 
 # --- Global Variables
-numOfPlayers = 1
+numOfPlayers = 0
 connections = []        # List of TCP connections
-udp_connections = {}    # Dictionary to store client UDP addresses
-scores = {} 
-# score = 0               # Global score
+udp_connections = {}    # Dictionary to store client UDP addresses corresponding to which player
+scores = {}             # Dictionary that corresponds the (address, port) with each individual score
 running = True          # Global flag to control loops
 
 def broadcast_tcp(message):
@@ -95,9 +94,9 @@ def udp_server():
             continue
 
         elif msg == "cookie":
-            print(f"Received data form ", udp_connections[addr])
+            print(f"Received data from ", udp_connections[addr])
             scores[addr] += 1   # Add score to the one who pressed it, so it's not a global score.
-            print(f"Cookie collected from {addr} ! New score:", scores[addr])
+            print(f"Cookie collected from {udp_connections[addr]} ! New score:", scores[addr])
             broadcast_udp(f"Score: {scores[addr]}")
             continue
 

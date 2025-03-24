@@ -3,17 +3,15 @@ import select
 import socket
 import threading
 import pygame
-from game import Game  # Your Pygame game class
+from game import Game         
 from config import BACKGROUND_COLOR
-from ui import draw_plate, draw_pancakes, draw_scores
-from server.shared import game_state
+from ui import draw_plate, draw_cookies
+from server.shared import game_state  
 
-# --- Network Configuration ---
 HOST = 'localhost'
 TCP_PORT = 5555
 UDP_PORT = 5556
 
-# Global mode flag and score variable.
 mode = "TCP"
 network_score = 0
 start_udp_mode = False
@@ -36,11 +34,11 @@ def udp_receive(udp_sock):
         try:
             data, _ = udp_sock.recvfrom(1024)
             message = data.decode().strip()
+            # When a score update is received, print the same cookie message.
             if message.startswith("Score:"):
                 try:
                     network_score = int(message.split(":")[1].strip())
-                    # Print the updated score when received.
-                    print("Updated score:", network_score)
+                    print("Cookie collected! New score:", network_score)
                 except ValueError:
                     pass
         except Exception as e:
@@ -48,14 +46,18 @@ def udp_receive(udp_sock):
             break
 
 def udp_mode():
+    # Create UDP socket and bind to an ephemeral port.
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_sock.bind(('', 0))
     udp_sock.sendto("register".encode(), (HOST, UDP_PORT))
     
     threading.Thread(target=udp_receive, args=(udp_sock,), daemon=True).start()
     
-    game = Game()  
+    # Initialize and run the game.
+    game = Game()  # This sets up your Pygame window and game objects.
     running = True
+    clock = pygame.time.Clock()
+    
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -69,10 +71,9 @@ def udp_mode():
         
         game.screen.fill(BACKGROUND_COLOR)
         draw_plate(game.screen)
-        draw_pancakes(game.screen, game.pancakes)
-        draw_scores(game.screen, network_score)
+        draw_cookies(game.screen, game.cookies)
         pygame.display.flip()
-        game.clock.tick(60)
+        clock.tick(60)
     
     pygame.quit()
     udp_sock.close()
