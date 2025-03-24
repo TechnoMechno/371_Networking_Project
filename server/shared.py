@@ -6,5 +6,5 @@ class GameState(Enum):
     IN_PROGRESS = "in_progress"
     DISPLAY_RESULTS = "display_results"
     GAME_OVER = "game_over"
-                     # List of tuples: (name, ip, udp_port) 
+                     
 game_state = GameState.WAITING
