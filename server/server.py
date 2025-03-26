@@ -4,7 +4,7 @@ import pygame
 from shared import GameState, game_state  # Assumes GameState and game_state are defined in shared.py
 
 MAX_PLAYERS = 4
-HOST = 'localhost'
+HOST = '0.0.0.0'
 TCP_PORT = 5555    
 UDP_PORT = 5556
 

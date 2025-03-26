@@ -8,7 +8,7 @@ from config import BACKGROUND_COLOR
 from ui import draw_plate, draw_cookies
 from server.shared import game_state  
 
-HOST = 'localhost'
+HOST = '172.105.106.139'
 TCP_PORT = 5555
 UDP_PORT = 5556
 
