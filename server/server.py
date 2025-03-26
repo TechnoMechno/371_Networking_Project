@@ -37,8 +37,16 @@ def handle_client(conn, addr):
     """Handles player connections in the TCP lobby."""
     global numOfPlayers, game_state
     numOfPlayers += 1
-    player_id = f"player{numOfPlayers}"
+    
+    # Assign a player ID to the new connection
+    player_id = f"player {numOfPlayers}"
     connections.append(conn)
+
+    # Send the player ID to the client
+    try:
+        conn.send(player_id.encode())
+    except Exception as e:
+        print(f"Error sending player ID to {player_id}: {e}")
     
     join_msg = f"{player_id} has joined the lobby."
     print(join_msg)
