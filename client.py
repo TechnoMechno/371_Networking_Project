@@ -5,8 +5,8 @@ import threading
 import pygame
 from game import Game         
 from config import BACKGROUND_COLOR
-from ui import draw_plate, draw_cookies
-from server.shared import game_state  
+from ui import draw_plate, draw_cookies, draw_interface
+from server.shared import GameState
 
 HOST = '172.105.106.139'
 TCP_PORT = 5555
@@ -82,7 +82,8 @@ def udp_mode():
         
         game.screen.fill(BACKGROUND_COLOR)
         draw_plate(game.screen)
-        draw_cookies(game.screen, game.cookies)
+        draw_cookies(game.screen, game.pancakes)
+        draw_interface(game.screen, network_score)
         pygame.display.flip()
         clock.tick(60)
     
@@ -156,3 +157,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
