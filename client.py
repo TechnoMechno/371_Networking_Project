@@ -5,8 +5,8 @@ import threading
 import pygame
 from game import Game         
 from config import BACKGROUND_COLOR
-from ui import draw_plate, draw_cookies
-from server.shared import game_state  
+from ui import draw_plate, draw_cookies, draw_interface
+from server.shared import GameState
 
 HOST = '172.105.106.139'
 TCP_PORT = 5555
@@ -15,14 +15,25 @@ UDP_PORT = 5556
 mode = "TCP"
 network_score = 0
 start_udp_mode = False
+is_first_player = True  # Because only the first player should have access to start the game.
 
 def tcp_receive(tcp_sock):
-    global start_udp_mode
+    global start_udp_mode, is_first_player
     while True:
         try:
             message = tcp_sock.recv(1024).decode().strip()
             if not message:
                 break
+            # check if server is sending a player number
+            # ideally, for server to send "player 1" for the first player
+            if message.lower().startswith("player"):
+                parts = message.lower.split()
+                if len(parts) >= 2 and parts[1] == "1":
+                    is_first_player = True
+                    print("First player")
+                else:
+                    is_first_player = False
+                    print("Not first player")
             if message.lower() == "game has started":
                 start_udp_mode = True
         except Exception as e:
@@ -54,7 +65,7 @@ def udp_mode():
     threading.Thread(target=udp_receive, args=(udp_sock,), daemon=True).start()
     
     # Initialize and run the game.
-    game = Game()  # This sets up your Pygame window and game objects.
+    game = Game()  
     running = True
     clock = pygame.time.Clock()
     
@@ -71,7 +82,8 @@ def udp_mode():
         
         game.screen.fill(BACKGROUND_COLOR)
         draw_plate(game.screen)
-        draw_cookies(game.screen, game.cookies)
+        draw_cookies(game.screen, game.pancakes)
+        draw_interface(game.screen, network_score)
         pygame.display.flip()
         clock.tick(60)
     
@@ -107,13 +119,23 @@ def main():
             # Process any inputs collected by the input thread
             if input_buffer:
                 user_input = input_buffer.pop(0)
-                try:
-                    tcp_sock.send(user_input.encode())
-                    print(f"You sent: {user_input}")
-                except Exception as e:
-                    print(f"TCP send error: {e}")
-                    break
-                    
+
+                # Allowing the "start" command only for the first player
+                if user_input.lower() == "start":
+                    if is_first_player:
+                        tcp_sock.send(user_input.encode())
+                        print("starting game")
+                    else:
+                        print("wait for first player to start the game")
+                        continue
+                else: 
+                    try:
+                        tcp_sock.send(user_input.encode())
+                        print(f"You sent: {user_input}")
+                    except Exception as e:
+                        print(f"TCP send error: {e}")
+                        break
+                        
                 if user_input.lower() == "quit":
                     break
 
@@ -135,3 +157,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

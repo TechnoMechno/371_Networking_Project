@@ -32,7 +32,7 @@ def run_cookie_game(get_score, send_cookie, send_quit):
                     running = False
 
         draw_plate(game.screen)
-        draw_pancakes(game.screen, game.pancakes)
+        draw_cookies(game.screen, game.pancakes)
         draw_scores(game.screen, get_score())
         pygame.display.flip()
         game.clock.tick(60)
