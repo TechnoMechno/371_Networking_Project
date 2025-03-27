@@ -1,6 +1,10 @@
 import socket
 import threading
 import pygame
+from game import Game         
+from config import BACKGROUND_COLOR
+from ui import draw_plate, draw_cookies, draw_interface
+from shared import GameState
 
 HOST = '127.0.0.1'  # Change to your server IP
 TCP_PORT = 5555
