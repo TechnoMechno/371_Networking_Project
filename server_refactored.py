@@ -164,7 +164,7 @@ def server():
     # Create initial cookies for the game
     with data_lock:
         for i in range(5):
-            cookies[i] = Cookie(cookie_id=i, position=[200 + i * 100, 300], cookie_type="regular")
+            cookies[i] = Cookie(cookie_id=i, position=[200 + i * 100, 300])
 
     # Start the UDP server loop in a separate thread
     threading.Thread(target=udp_server, daemon=True).start()

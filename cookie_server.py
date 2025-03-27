@@ -24,6 +24,14 @@ class Cookie:
       self.offset = [0, 0]
       self.on_plate = None
       self.original_position = list(position)  # Save starting position
+    def is_clicked(self, mouse_pos):
+        """
+        Returns True if mouse_pos is within this cookie's radius (circle check).
+        """
+        dx = mouse_pos[0] - self.position[0]
+        dy = mouse_pos[1] - self.position[1]
+        distance = math.hypot(dx, dy)
+        return distance < self.radius
 
     def start_drag(self, player_id):
         """
