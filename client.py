@@ -6,7 +6,7 @@ import pygame
 from game import Game         
 from config import BACKGROUND_COLOR
 from ui import draw_plate, draw_cookies, draw_interface
-from server.shared import GameState
+from shared import GameState
 
 HOST = '172.105.106.139'
 TCP_PORT = 5555

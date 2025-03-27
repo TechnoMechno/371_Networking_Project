@@ -3,6 +3,7 @@ import socket
 import threading
 import pygame
 import json
+from shared import GameState, game_state 
 
 # PORT and IP Address 
 PORT = 5555 
