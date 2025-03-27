@@ -2,6 +2,7 @@ from cookie import Cookie
 import socket 
 import threading
 import pygame
+import json
 
 # PORT and IP Address 
 PORT = 5555 
@@ -31,11 +32,25 @@ class GameClient:
         # TODO: implement client to server 
         pass
 
-    def receive_from_server():
+    def receive_from_server(client_socket):
         """Receive messages from the server."""
         while True:
             data = client_socket.recv(1024)
-
+            try:
+                data = client_socket.recv(4096).decode()
+                if not data:
+                    continue
+                data_obj = json.loads(data)
+                if data_obj['type'] == 'update':
+                    pass
+                elif data_obj['type'] == "update_state":
+                    pass 
+                else:
+                    player_id = data_obj['player_id']
+                    pass
+            except Exception as e:
+                print(f"Receive error: {e}")
+                break
 
     def if_dragging(self):
         """Check if the player is dragging the cookie."""
@@ -68,7 +83,6 @@ class GameClient:
 
     def tick():
         """Update the game state."""
-
         pass
         
 def main():
@@ -76,4 +90,6 @@ def main():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client_socket.connect(server_address)
 
-    
+
+
+
