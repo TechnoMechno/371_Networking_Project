@@ -16,6 +16,8 @@ mouse_x = pygame.mouse.get_pos()[0]
 mouse_y = pygame.mouse.get_pos()[1]
 is_dragging = False
 
+client_cookies = {}
+
 update_message = {
     'player_id': player_id,
     'mouse_x': mouse_x,
@@ -43,7 +45,14 @@ class GameClient:
                     continue
                 data_obj = json.loads(data)
                 if data_obj['type'] == 'update':
-                    pass
+                    server_cookies = data_obj['cookies']
+                    for cookie_id, cookie_data in server_cookies.items():
+                        cookie_id = int(cookie_id)
+
+                        if (cookie_id) in client_cookies:
+                            client_cookies[cookie_id].position = cookie_data["position"]
+                            client_cookies[cookie_id].cookie_type = cookie_data["cookie_type"]
+                            client_cookies[cookie_id].locked_by = cookie_data["locked_by"]
                 elif data_obj['type'] == "update_state":
                     pass 
                 else:
