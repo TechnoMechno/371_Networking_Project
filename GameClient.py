@@ -52,6 +52,20 @@ class GameClient:
         mouse_x = pygame.mouse.get_pos()[0]
         mouse_y = pygame.mouse.get_pos()[1]
 
+    def to_dict(self):
+        """
+        Convert the cookie's state to a dictionary for serialization.
+        
+        Returns:
+            dict: Dictionary representation of the cookie.
+        """
+        return {
+            "cookie_id": self.cookie_id,
+            "position": self.position,
+            "cookie_type": self.cookie_type,
+            "locked_by": self.locked_by
+        }
+
     def tick():
         """Update the game state."""
 
