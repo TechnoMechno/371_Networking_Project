@@ -14,7 +14,6 @@ player_id = -1 # The player ID assigned by the server.
 cookie_id = -1 # The cookie ID picked up by player
 mouse_x = pygame.mouse.get_pos()[0]
 mouse_y = pygame.mouse.get_pos()[1]
-is_dragging = False
 
 client_cookies = {}
 
@@ -27,8 +26,13 @@ update_message = {
 }
 
 class GameClient:
-    def __init__(self, player_id):
+    def __init__(self, player_id, server_address):
         self.player_id = player_id
+        self.server_address = server_address
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.client_socket.connect(server_address)
+        self.cookie_id = -1
+        self.is_dragging = False
 
     def join_game(self):
         """Join the game lobby."""
@@ -91,14 +95,42 @@ class GameClient:
             "locked_by": self.locked_by
         }
 
-    def tick():
+    def tick(self):
         """Update the game state."""
-        pass
+        while True:
+            mouse_x = pygame.mouse.get_pos()[0] 
+            mouse_y = pygame.mouse.get_pos()[1]
+            update_message = {
+                'player_id': self.player_id,
+                'mouse_x': mouse_x,
+                'mouse_y': mouse_y,
+                'cookie_id': self.cookie_id,
+                'is_dragging': self.is_dragging
+            }
+            try:
+                self.client_socket.sendto(json.dumps(update_message).encode().encode())
+            except Exception as e:
+                print(f"Send error: {e}")
+                break
         
 def main():
     server_address = (ip_address, PORT) 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client_socket.connect(server_address)
+
+    # Start a thread to receive messages from the server
+    receive_thread = threading.Thread(target=GameClient.receive_from_server, args=(client_socket,))
+    receive_thread.start()
+
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+
+
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
 
 
 
