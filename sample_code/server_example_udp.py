@@ -1,20 +1,8 @@
-# Import necessary Python modules for the server:
-# - socket: Provides tools for network communication using UDP protocol
-# - threading: Allows multiple tasks (like receiving messages) to run at the same time
-# - time: Used to control timing, like setting the game update rate
-# - json: Handles encoding (to send) and decoding (to receive) data in JSON format
+
 import socket
 import threading
 import time
 import json
-
-# Define shared game state variables that all parts of the program can access:
-# - players: A dictionary where keys are player IDs (integers) and values are their network addresses (tuples of IP and port)
-# - squares: A dictionary mapping square IDs (integers) to their [x, y] positions on the game screen
-# - mouses: A dictionary tracking each player's mouse position as [x, y] coordinates, with player IDs as keys
-# - dragging: A dictionary showing which player (by ID) is dragging which square (by ID)
-# - next_player_id: A counter to give each new player a unique ID, starting at 0
-# - data_lock: A threading lock to prevent multiple threads from changing shared data at the same time
 
 players = {}   # Format: {player_id: (ip_address, port)}
 squares = {0: [100, 100], 1: [200, 200], 2: [300, 300], 3: [400, 400], 4: [500, 500]}  # Initial square positions

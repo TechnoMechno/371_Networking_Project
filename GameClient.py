@@ -5,11 +5,11 @@ import pygame
 import json
 from shared import GameState, game_state 
 
-# PORT and IP Address 
-PORT = 5555 
+# PORT and IP Address
+PORT = 5555 w
 ip_address = "localhost"
 
-in_game = False
+in_game = Falseww
 player_id = -1 # The player ID assigned by the server.
 cookie_id = -1 # The cookie ID picked up by player
 mouse_x = pygame.mouse.get_pos()[0]
