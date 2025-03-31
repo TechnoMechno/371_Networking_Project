@@ -23,18 +23,19 @@ SERVER_PORT = 5555
 
 def find_top_cookie(mouse_pos, cookies):
     """
-    Given the current mouse position and the cookies dictionary,
-    return the ID of the topmost cookie under the cursor.
-    Assumes higher cookie IDs are drawn on top.
+    Given the current mouse position and the cookies dictionary (from server state),
+    returns the ID of the topmost cookie under the cursor.
+    Assumes cookies with higher numeric IDs (converted from keys) are drawn on top.
     """
-    for cid in sorted(cookies.keys(), reverse=True):
-        cookie = cookies[cid]
+    # Convert keys to integers, sort in descending order.
+    for cid in sorted([int(k) for k in cookies.keys()], reverse=True):
+        cookie = cookies[str(cid)]  # assuming keys in the dict are strings
         pos = cookie.get("position", [0, 0])
         radius = cookie.get("radius", 30)
         dx = mouse_pos[0] - pos[0]
         dy = mouse_pos[1] - pos[1]
-        if (dx*dx + dy*dy)**0.5 < radius:
-            return cid
+        if (dx * dx + dy * dy) ** 0.5 < radius:
+            return str(cid)
     return None
 
 def main():

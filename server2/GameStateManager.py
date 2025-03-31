@@ -110,7 +110,6 @@ class GameStateManager:
                     
                     if cookie:
                         # For additional safety, check if the mouse is over the cookie.
-                        
                         if cookie.is_clicked(self.players[player_id].mouse_pos):
                             # Lock the cookie to this player and update its position.
                             if cookie.locked_by is None or cookie.locked_by == player_id:
