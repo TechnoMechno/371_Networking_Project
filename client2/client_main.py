@@ -21,6 +21,22 @@ from render import load_assets, render
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 5555
 
+def find_top_cookie(mouse_pos, cookies):
+    """
+    Given the current mouse position and the cookies dictionary,
+    return the ID of the topmost cookie under the cursor.
+    Assumes higher cookie IDs are drawn on top.
+    """
+    for cid in sorted(cookies.keys(), reverse=True):
+        cookie = cookies[cid]
+        pos = cookie.get("position", [0, 0])
+        radius = cookie.get("radius", 30)
+        dx = mouse_pos[0] - pos[0]
+        dy = mouse_pos[1] - pos[1]
+        if (dx*dx + dy*dy)**0.5 < radius:
+            return cid
+    return None
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -47,9 +63,8 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # For now, simulate dragging the first cookie (if available).
-                if game_state.cookies:
-                    dragging_cookie = list(game_state.cookies.keys())[0]
+                # Use collision check to find which cookie is under the cursor
+                dragging_cookie = find_top_cookie(current_mouse_pos, game_state.cookies)
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 dragging_cookie = None
 
@@ -59,6 +74,8 @@ def main():
             "position": current_mouse_pos,
             "dragged_cookie": dragging_cookie
         }
+        print("Sending update:", current_mouse_pos, dragging_cookie)
+
         networking.send_message(update_msg)
 
         # Render the current game state

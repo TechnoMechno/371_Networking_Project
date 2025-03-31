@@ -88,18 +88,42 @@ class GameStateManager:
                 player_id = self.client_addresses[addr]
                 # Update the player's mouse position
                 self.players[player_id].mouse_pos = data_obj.get("position", self.players[player_id].mouse_pos)
+                # Debug print: show the player's updated mouse position and dragged cookie value
+                dragged = data_obj.get("dragged_cookie")
+                print(f"Received update from player {player_id}: pos={self.players[player_id].mouse_pos}, dragged_cookie={dragged}")
+                
                 # Process dragging: 'dragged_cookie' might be null or a cookie id
                 dragged = data_obj.get("dragged_cookie")
                 if dragged is None:
                     # Release any cookie locked by this player.
                     for cookie in self.cookies.values():
                         if cookie.locked_by == player_id:
+                            snapped = cookie.snap_to_player_plate(self.players[player_id])
+                            if not snapped:
+                                # If not snapped, revert to original position.
+                                cookie.update_position(cookie.original_position)
                             cookie.locked_by = None
                 else:
-                    # Here, you might perform a collision check to confirm the dragged cookie is valid.
-                    # For simplicity, we assume the cookie id is valid and lock it if not already locked.
-                    if dragged in self.cookies and self.cookies[dragged].locked_by is None:
-                        self.cookies[dragged].locked_by = player_id
+                    # The client is dragging a cookie.
+                    dragged = int(dragged)
+                    cookie = self.cookies.get(dragged)
+                    
+                    if cookie:
+                        # For additional safety, check if the mouse is over the cookie.
+                        
+                        if cookie.is_clicked(self.players[player_id].mouse_pos):
+                            # Lock the cookie to this player and update its position.
+                            if cookie.locked_by is None or cookie.locked_by == player_id:
+                                cookie.locked_by = player_id
+                                cookie.update_position(self.players[player_id].mouse_pos)
+                                
+                                
+    def update_dragged_cookies(self):
+        with self.lock:
+            for cookie in self.cookies.values():
+                if cookie.locked_by is not None and cookie.locked_by in self.players:
+                    old_pos = cookie.position.copy()
+                    cookie.update_position(self.players[cookie.locked_by].mouse_pos)
 
     def get_game_data(self):
         """

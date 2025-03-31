@@ -26,6 +26,7 @@ class Cookie:
         return False
 
     def stop_drag(self, player_id):
+        #Releases the lock on the cookie if it is currently locked by the given player.
         if self.locked_by == player_id:
             self.locked_by = None
             return True
@@ -33,7 +34,37 @@ class Cookie:
 
     def update_position(self, new_position):
         self.position = new_position
-
+        
+    def snap_to_player_plate(self, player):
+        """
+        Check if the cookie is within the player's plate boundaries.
+        If yes, snap the cookie to the plate's center and return True.
+        Otherwise, revert the cookie's position to its original position and return False.
+        """
+        # Extract player's plate position and radius.
+        plate_pos = player.plate.position  # e.g., [x, y]
+        plate_radius = player.plate.radius
+        dx = self.position[0] - plate_pos[0]
+        dy = self.position[1] - plate_pos[1]
+        distance = math.hypot(dx, dy)
+        if distance < plate_radius:
+            # Snap the cookie to the plate's center.
+            self.position = plate_pos.copy()
+            self.on_plate = player.plate
+            return True
+        else:
+            # Revert the cookie to its original position.
+            self.position = self.original_position.copy()
+            return False
+    
+    def is_on_central_plate(self, central_plate):
+        """
+        Checks if the cookie is on the central plate.
+        """
+        dx = self.position[0] - central_plate.x
+        dy = self.position[1] - central_plate.y
+        return math.hypot(dx, dy) < central_plate.radius
+    
     def to_dict(self):
         return {
             "cookie_id": self.cookie_id,

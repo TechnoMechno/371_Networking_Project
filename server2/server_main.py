@@ -29,15 +29,17 @@ def main():
     receiver_thread = threading.Thread(target=receive_messages, args=(udp_socket, game_manager), daemon=True)
     receiver_thread.start()
     
-    game_manager
     
     # Main loop: broadcast the current game state at a fixed interval (e.g., 60 FPS)
     try:
         while True:
             # Get the current state as a dictionary
+            
             data = game_manager.get_game_data()
+            
             message = json.dumps(data)
             # Broadcast state to all connected clients
+            game_manager.update_dragged_cookies()
             broadcast_udp(udp_socket, message, game_manager.get_all_client_addresses())
             time.sleep(1/60)
     except KeyboardInterrupt:

@@ -25,3 +25,4 @@ class ClientGameState:
         elif msg_type == "update_state":
             self.cookies = msg.get("cookies", {})
             self.players = msg.get("players", {})
+
