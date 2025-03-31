@@ -1,9 +1,11 @@
 # GameStateManager.py
 import threading
 import json
+import math
+import random
 from game_code.player import Player
 from game_code.cookie_refactored import Cookie
-from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT
+from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, COOKIE_COUNT
 from game_code.Plate import Plate
 
 # -------------------------------------------------------------
@@ -35,9 +37,20 @@ class GameStateManager:
         central_plate_radius = 260  # or any value you choose
         self.central_plate = Plate(central_position, central_plate_radius)
 
-        # Initialize any initial game objects (example: create some cookies)
-        for i in range(5):
-            self.cookies[i] = Cookie(cookie_id=i, position=[200 + i * 100, 300])
+        # # Initialize any initial game objects (example: create some cookies)
+        # for i in range(5):
+        #     self.cookies[i] = Cookie(cookie_id=i, position=[200 + i * 100, 300])
+            
+        # Randomly spawn cookies
+        spread_radius = 150  # Increased spread for more dispersion
+        for i in range(COOKIE_COUNT):
+            r = spread_radius * math.sqrt(random.random())
+            theta = random.uniform(0, 2 * math.pi)
+            x = self.central_plate.position[0] + r * math.cos(theta)
+            y = self.central_plate.position[1] + r * math.sin(theta)
+            
+            cookie_type = "star" if i % 2 == 0 else "regular"
+            self.cookies[i] = Cookie(cookie_id=i, position=[x, y])
 
     def handle_message(self, message, addr, udp_socket):
         """

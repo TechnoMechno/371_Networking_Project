@@ -28,7 +28,7 @@ class ClientNetworking:
     def receive_loop(self):
         while self.client_running:
             try:
-                data, addr = self.udp_socket.recvfrom(4096)
+                data, addr = self.udp_socket.recvfrom(8192)
                 msg_obj = json.loads(data.decode())
                 for cb in self.receive_callbacks:
                     cb(msg_obj)
