@@ -1,8 +1,12 @@
 import pygame
 import math
 import random
+import sys
+import os
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND_COLOR
-from cookie import Cookie
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from game_code.cookie_old import Cookie
 from player import Player
 from ui import draw_cookies, draw_plate, draw_interface
 from Plate import Plate
@@ -31,7 +35,8 @@ class Game:
     
     def setup_game_objects(self):
         # Create the central plate
-        self.central_plate = Plate(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 260)
+        pos = [SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2]
+        self.central_plate = Plate(pos, 260)
         
         # Spawn 30 cookies on the central plate with more dispersed positions
         self.cookies = []
@@ -40,15 +45,15 @@ class Game:
         for i in range(num_cookies):
             r = spread_radius * math.sqrt(random.random())
             theta = random.uniform(0, 2 * math.pi)
-            x = self.central_plate.x + r * math.cos(theta)
-            y = self.central_plate.y + r * math.sin(theta)
+            x = self.central_plate.position[0] + r * math.cos(theta)
+            y = self.central_plate.position[1] + r * math.sin(theta)
             
             cookie_type = "star" if i % 2 == 0 else "regular"
             self.cookies.append(Cookie([x, y], cookie_type))
         
         # Setup players
         self.players = [
-            Player("Player 1"),
+            Player("1", "localhost"),
             Player("Player 2"),
             Player("Player 3"),
             Player("Player 4")

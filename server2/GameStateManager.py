@@ -2,13 +2,22 @@
 import threading
 import json
 from game_code.player import Player
-from game_code.cookie_server import Cookie
+from game_code.cookie_refactored import Cookie
 from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT
+from game_code.Plate import Plate
+
+# -------------------------------------------------------------
+# This module maintains the authoritative game state on the server.
+# It manages players, cookies, and client addresses, processes incoming
+# JSON messages from clients, and provides the full game state as a dictionary
+# for broadcasting to connected clients.
+# -------------------------------------------------------------
 
 class GameState:
-    BEFORE_START = 0
-    PLAYING = 1
-    GAME_OVER = 2
+    MENU = 0
+    LOBBY = 1
+    PLAYING = 2
+    GAME_OVER = 3
 
 class GameStateManager:
     def __init__(self):
@@ -16,10 +25,15 @@ class GameStateManager:
         self.players = {}           # Format: {player_id: Player}
         self.cookies = {}           # Format: {cookie_id: Cookie}
         self.client_addresses = {}  # Format: {addr: player_id}
-        self.game_state = GameState.BEFORE_START
+        self.game_state = GameState.MENU
         
         self.next_player_id = 1     # Incrementing player id
         self.lock = threading.Lock()  # For thread safety
+        
+        # Create the central plate (for example, centered in the screen)
+        central_position = [SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2]
+        central_plate_radius = 260  # or any value you choose
+        self.central_plate = Plate(central_position, central_plate_radius)
 
         # Initialize any initial game objects (example: create some cookies)
         for i in range(5):
@@ -82,6 +96,7 @@ class GameStateManager:
             state = {
                 "type": "update_state",
                 "game_state": self.game_state,
+                "central_plate": self.central_plate.to_dict(),
                 "cookies": {str(cid): cookie.to_dict() for cid, cookie in self.cookies.items()},
                 "players": {str(pid): player.to_dict() for pid, player in self.players.items()}
             }

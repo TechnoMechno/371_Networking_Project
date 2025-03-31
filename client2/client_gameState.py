@@ -3,12 +3,19 @@ client_gameState.py - Maintains the local game state for the client.
 This module holds a copy of the game state (cookies, players, assigned player id)
 and provides methods to update that state based on messages received from the server.
 """
+from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT
+from game_code.Plate import Plate
+
 
 class ClientGameState:
     def __init__(self):
         self.cookies = {}   # e.g., {"0": {...}, "1": {...}, ...}
         self.players = {}   # e.g., {"1": {...}, "2": {...}, ...}
         self.assigned_player_id = None
+        # Create the central plate (for example, centered in the screen)
+        central_position = [SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2]
+        central_plate_radius = 260  # or any value you choose
+        self.central_plate = Plate(central_position, central_plate_radius)
     
     def handle_update(self, msg):
         msg_type = msg.get("type", "")

@@ -1,6 +1,13 @@
 import socket
 import json
 
+# -------------------------------------------------------------
+# This module provides helper functions for UDP networking.
+# It handles creating and binding UDP sockets, broadcasting messages to
+# a list of client addresses, and continuously receiving messages on the UDP
+# socket, delegating processing to the game state manager.
+# -------------------------------------------------------------
+
 def create_udp_socket(host, port):
     """Creates a UDP socket, binds it to (host, port), and returns it."""
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

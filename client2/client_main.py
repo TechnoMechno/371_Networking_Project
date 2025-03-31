@@ -4,7 +4,6 @@ import json
 import sys
 import os
 
-
 """
 client_main.py - Entry point for the Cookie Dragging Game Client.
 This file initializes Pygame, loads assets, sets up the game state and networking,

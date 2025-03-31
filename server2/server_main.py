@@ -11,6 +11,13 @@ from game_code.config import HOST, UDP_PORT  # e.g., HOST = "0.0.0.0", UDP_PORT 
 from networking import create_udp_socket, broadcast_udp, receive_messages
 from GameStateManager import GameStateManager
 
+# -------------------------------------------------------------
+# This is the main entry point for the server.
+# It initializes the UDP socket, creates the game state manager,
+# starts the receiver thread to process incoming messages, and then
+# continuously broadcasts the current game state to all connected clients.
+# -------------------------------------------------------------
+
 def main():
     # Create a UDP socket and bind it
     udp_socket = create_udp_socket(HOST, UDP_PORT)

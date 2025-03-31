@@ -8,4 +8,4 @@ class Plate:
         self.radius = radius      # The plate's size
 
     def to_dict(self):
-        return {"position": self.position, "radius": self.radius}
+        return {"plate_position": self.position, "plate_radius": self.radius}
