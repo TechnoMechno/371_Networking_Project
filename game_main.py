@@ -87,33 +87,37 @@ def ip_input_screen():
     port_input = "5555" 
     
     font = pygame.font.SysFont("comicsansms", 30)
-    start_font = pygame.font.SysFont("Arial", 20) 
+    label_font = pygame.font.SysFont("Arial", 20)
 
-    is_typing_ip = True 
+    is_typing_ip = True
+    ip_box = pygame.Rect(WIDTH // 2 - 150, 160, 300, 40)
+    port_box = pygame.Rect(WIDTH // 2 - 150, 220, 300, 40)
+
+    clock = pygame.time.Clock()
+    blink = True
+    blink_timer = 0
 
     while input_active:
         screen.fill(WHITE)
-        title = font.render("Enter IP Address", True, DARK_BROWN)
-        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
+        title = font.render("Join Game", True, DARK_BROWN)
+        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 40))
 
-        label = font.render("Press [Tab] to switch. Press [Enter] to confirm.", True, DARK_BROWN)
-        screen.blit(label, (WIDTH // 2 - label.get_width() // 2, 100)) 
+        label = label_font.render("Click boxes or press [Tab] to switch, [Enter] to confirm", True, DARK_BROWN)
+        screen.blit(label, (WIDTH // 2 - label.get_width() // 2, 90)) 
 
-        # Draw input boxes
-        ip_color = (200, 200, 255) if is_typing_ip else (220, 220, 220)
-        pygame.draw.rect(screen, ip_color, (WIDTH // 2 - 150, 160, 300, 40))
-        ip_text = font.render(ip_input or "Enter IP", True, BLACK)
-        screen.blit(ip_text, (WIDTH // 2 - 140, 165))
-
-        port_color = (200, 200, 255) if not is_typing_ip else (220, 220, 220)
-        pygame.draw.rect(screen, port_color, (WIDTH // 2 - 150, 220, 300, 40))
-        port_text = font.render(port_input or "Enter Port", True, BLACK)
-        screen.blit(port_text, (WIDTH // 2 - 140, 225))
+        mouse_pos = pygame.mouse.get_pos()
+        clicked = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                clicked = True
+                if ip_box.collidepoint(event.pos):
+                    is_typing_ip = True
+                elif port_box.collidepoint(event.pos):
+                    is_typing_ip = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_TAB:
                     is_typing_ip = not is_typing_ip
@@ -128,11 +132,40 @@ def ip_input_screen():
                 else:
                     if is_typing_ip:
                         ip_input += event.unicode
-                    else:
-                        if event.unicode.isdigit():
-                            port_input += event.unicode
+                    elif event.unicode.isdigit():
+                        port_input += event.unicode
+
+        # Input box colors
+        ip_color = (200, 200, 255) if is_typing_ip else (220, 220, 220)
+        port_color = (200, 200, 255) if not is_typing_ip else (220, 220, 220)
+
+        # Draw boxes
+        pygame.draw.rect(screen, ip_color, ip_box, border_radius=6)
+        pygame.draw.rect(screen, port_color, port_box, border_radius=6)
+        pygame.draw.rect(screen, BLACK, ip_box, 2, border_radius=6)
+        pygame.draw.rect(screen, BLACK, port_box, 2, border_radius=6)
+
+        # Blinking cursor logic
+        blink_timer += clock.get_time()
+        if blink_timer > 500:
+            blink = not blink
+            blink_timer = 0
+
+        # Render text with blinking cursor
+        ip_display = ip_input if ip_input else "Enter IP"
+        if is_typing_ip and blink:
+            ip_display += "|"
+        ip_text = font.render(ip_display, True, BLACK)
+        screen.blit(ip_text, (ip_box.x + 10, ip_box.y + 5))
+
+        port_display = port_input if port_input else "Enter Port"
+        if not is_typing_ip and blink:
+            port_display += "|"
+        port_text = font.render(port_display, True, BLACK)
+        screen.blit(port_text, (port_box.x + 10, port_box.y + 5))
 
         pygame.display.flip()
+        clock.tick(60)
 
 
 # === RUN GAME ===
