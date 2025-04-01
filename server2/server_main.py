@@ -8,8 +8,8 @@ import time
 import json
 
 from game_code.config import HOST, UDP_PORT  # e.g., HOST = "0.0.0.0", UDP_PORT = 5555
-from networking import create_udp_socket, broadcast_udp, receive_messages
-from GameStateManager import GameStateManager
+from server2.networking import create_udp_socket, broadcast_udp, receive_messages
+from server2.GameStateManager import GameStateManager
 
 # -------------------------------------------------------------
 # This is the main entry point for the server.

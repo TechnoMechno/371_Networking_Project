@@ -3,3 +3,6 @@
 
 # Ignoring OS specific files
 .DS_Store
+
+# Ignoring testing files
+karen_test.py
