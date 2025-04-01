@@ -45,3 +45,4 @@ class ClientNetworking:
     def shutdown(self):
         self.client_running = False
         self.udp_socket.close()
+
