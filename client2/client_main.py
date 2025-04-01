@@ -15,8 +15,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND_COLOR, COOKIE_SIZE, REGULAR_COOKIE_IMAGE, STAR_COOKIE_IMAGE, PLATE_IMAGE
 from .client_networking import ClientNetworking
-from .client_gameState import ClientGameState
+from .client_gameManager import ClientGameManager
 from .render import load_assets, render
+from .Button import Button
+from .TextBox import TextBox
 
 #SERVER_IP = "142.58.214.104"
 SERVER_IP = "127.0.0.1"
@@ -49,14 +51,22 @@ def main():
     assets = load_assets()  # load_assets() taken from 'render.py'
 
     # Initialize game state
-    game_state = ClientGameManager()
+    game_manager = ClientGameManager()
     
     # Initialize networking and start receiving messages
     networking = ClientNetworking(SERVER_IP, SERVER_PORT)
-    networking.add_receive_callback(lambda msg: game_state.handle_update(msg))
+    networking.add_receive_callback(lambda msg: game_manager.handle_update(msg))
     networking.start_receiving()
 
     dragging_cookie = None
+    
+    # Create UI elements. We'll create different ones based on game state.
+    # For example, in MENU or LOBBY state, we want a "Start Game" button.
+    start_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
+    # In GAME_OVER state, we want a "Reset Game" button.
+    reset_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Reset Game", (128, 0, 0))
+    # Also, you might have a TextBox for entering a name in the MENU state.
+    name_box = TextBox((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 50, 200, 40), "Enter Name")
 
     running = True
     while running:
@@ -64,9 +74,10 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if game_manager.game_manager == 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # Use collision check to find which cookie is under the cursor
-                dragging_cookie = find_top_cookie(current_mouse_pos, game_state.cookies)
+                dragging_cookie = find_top_cookie(current_mouse_pos, game_manager.cookies)
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 dragging_cookie = None
 
@@ -81,7 +92,7 @@ def main():
         networking.send_message(update_msg)
 
         # Render the current game state
-        render(screen, game_state, assets, game_state.assigned_player_id)
+        render(screen, game_manager, assets, game_manager.assigned_player_id)
         clock.tick(60)
     
     networking.shutdown()
