@@ -135,7 +135,7 @@ class GameStateManager:
         with self.lock:
             state = {
                 "type": "update_state",
-                "game_state": self.game_state,
+                "game_state": self.game_state.value,
                 "central_plate": self.central_plate.to_dict(),
                 "cookies": {str(cid): cookie.to_dict() for cid, cookie in self.cookies.items()},
                 "players": {str(pid): player.to_dict() for pid, player in self.players.items()}
