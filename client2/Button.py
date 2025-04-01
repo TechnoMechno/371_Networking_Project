@@ -23,6 +23,7 @@ class Button:
     def handle_event(self, event):
         # For example, return True if the button is clicked
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            print(f"Button.handle_event: event.pos = {event.pos}, button rect = {self.rect}")
             if self.is_clicked(event.pos):
                 self.clicked = True
                 return True

@@ -54,4 +54,4 @@ def render(screen, game_state, assets, assigned_player_id):
         pos = player.get("mouse_pos", [0, 0])
         color = (255, 0, 0) if str(pid) == str(assigned_player_id) else (0, 255, 0)
         pygame.draw.circle(screen, color, (int(pos[0]), int(pos[1])), 5)
-    pygame.display.flip()
+    

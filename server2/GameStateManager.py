@@ -84,7 +84,7 @@ class GameStateManager:
                 self.players[player_id].mouse_pos = data_obj.get("position", self.players[player_id].mouse_pos)
                 # Debug print: show the player's updated mouse position and dragged cookie value
                 dragged = data_obj.get("dragged_cookie")
-                print(f"Received update from player {player_id}: pos={self.players[player_id].mouse_pos}, dragged_cookie={dragged}")
+                #print(f"Received update from player {player_id}: pos={self.players[player_id].mouse_pos}, dragged_cookie={dragged}")
                 
                 # Process dragging: 'dragged_cookie' might be null or a cookie id
                 dragged = data_obj.get("dragged_cookie")
@@ -110,11 +110,11 @@ class GameStateManager:
                                 cookie.locked_by = player_id
                                 cookie.update_position(self.players[player_id].mouse_pos)
             elif data_obj.get("type") == "start_game":
-                # Only allow player 1 to start the game
+                # Only allow player 1 to start the game (!!!!currently commented out)
                 player_id = self.client_addresses[addr]
-                if player_id == 1:
-                    self.start_game_flag = True
-                    print("Received start_game command from host.")
+                # if player_id == 1:
+                self.start_game_flag = True
+                print("Received start_game command from host.")
             elif data_obj.get("type") == "reset_game":
                 player_id = self.client_addresses[addr]
                 if player_id == 1:
@@ -153,7 +153,7 @@ class GameStateManager:
         if self.game_state == GameState.LOBBY:
             # Example condition: if at least 1 player has joined and a 'start' flag is set
             # You can set this flag in handle_message when a host's start command is received.
-            if getattr(self, 'start_game_flag', False):
+            if getattr(self, 'start_game_flag', False) and len(self.players) >= 1:
                 self.game_state = GameState.PLAYING
                 print("Transition: LOBBY -> PLAYING")
                 # Reset flag so it doesn't repeatedly trigger
@@ -162,8 +162,8 @@ class GameStateManager:
         # Transition from PLAYING to GAME_OVER:
         elif self.game_state == GameState.PLAYING:
             # Example condition: all cookies are snapped to a plate (i.e. locked by a player)
-            all_snapped = all(cookie.locked_by is not None for cookie in self.cookies.values())
-            if all_snapped:
+            all_collected = all(cookie.on_plate is not None for cookie in self.cookies.values())
+            if all_collected:
                 self.game_state = GameState.GAME_OVER
                 print("Transition: PLAYING -> GAME_OVER")
         

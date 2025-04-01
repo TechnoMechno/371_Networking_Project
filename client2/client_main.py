@@ -13,7 +13,7 @@ and runs the main game loop which handles input and rendering.
 # Add parent directory to sys.path so that game_code can be found
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND_COLOR, COOKIE_SIZE, REGULAR_COOKIE_IMAGE, STAR_COOKIE_IMAGE, PLATE_IMAGE
+from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND_COLOR, COOKIE_SIZE, REGULAR_COOKIE_IMAGE, STAR_COOKIE_IMAGE, PLATE_IMAGE, GameState
 from .client_networking import ClientNetworking
 from .client_gameManager import ClientGameManager
 from .render import load_assets, render
@@ -74,12 +74,22 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if game_manager.game_manager == 
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # Use collision check to find which cookie is under the cursor
-                dragging_cookie = find_top_cookie(current_mouse_pos, game_manager.cookies)
-            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                dragging_cookie = None
+            if game_manager.game_state == GameState.LOBBY.value:
+                if start_button.handle_event(event):
+                    # When Start Game is clicked, send a start_game message.
+                    networking.send_message({"type": "start_game"})
+                    print("Start game message sent")
+            elif game_manager.game_state == GameState.GAME_OVER.value:
+                if reset_button.handle_event(event):
+                    networking.send_message({"type": "reset_game"})
+                    print("Reset game message sent")
+            elif game_manager.game_state == GameState.PLAYING.value:
+                # HANDLE COOKIE DRAGGING IN PLAYING STATTE    
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Use collision check to find which cookie is under the cursor
+                    dragging_cookie = find_top_cookie(current_mouse_pos, game_manager.cookies)
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    dragging_cookie = None
 
         # Send unified update message every frame.
         update_msg = {
@@ -87,12 +97,18 @@ def main():
             "position": current_mouse_pos,
             "dragged_cookie": dragging_cookie
         }
-        print("Sending update:", current_mouse_pos, dragging_cookie)
 
         networking.send_message(update_msg)
 
-        # Render the current game state
-        render(screen, game_manager, assets, game_manager.assigned_player_id)
+        if game_manager.game_state == GameState.LOBBY.value:
+            start_button.draw(screen)
+        elif game_manager.game_state == GameState.GAME_OVER.value:
+            render(screen, game_manager, assets, game_manager.assigned_player_id)
+            reset_button.draw(screen)
+        elif game_manager.game_state == GameState.PLAYING.value:
+            render(screen, game_manager, assets, game_manager.assigned_player_id)
+
+        pygame.display.flip()
         clock.tick(60)
     
     networking.shutdown()
