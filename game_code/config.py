@@ -1,5 +1,6 @@
 # config.py
 import os
+import enum
 SCREEN_WIDTH = 1366
 SCREEN_HEIGHT = 768
 BACKGROUND_COLOR = (255,245,211)
@@ -12,3 +13,8 @@ STAR_COOKIE_IMAGE = os.path.join(ASSETS_DIR, "starcookie.png")
 PLATE_IMAGE = os.path.join(ASSETS_DIR, "plate.png")
 HOST = "0.0.0.0"
 UDP_PORT = 5555
+
+class GameState(enum.Enum):
+    LOBBY = 1
+    PLAYING = 2
+    GAME_OVER = 3

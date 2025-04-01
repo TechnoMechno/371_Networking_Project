@@ -5,7 +5,7 @@ import math
 import random
 from game_code.player import Player
 from game_code.cookie_refactored import Cookie
-from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, COOKIE_COUNT
+from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, COOKIE_COUNT, GameState
 from game_code.Plate import Plate
 
 # -------------------------------------------------------------
@@ -15,19 +15,13 @@ from game_code.Plate import Plate
 # for broadcasting to connected clients.
 # -------------------------------------------------------------
 
-class GameState:
-    MENU = 0
-    LOBBY = 1
-    PLAYING = 2
-    GAME_OVER = 3
-
 class GameStateManager:
     def __init__(self):
         # Dictionaries to hold game objects
         self.players = {}           # Format: {player_id: Player}
         self.cookies = {}           # Format: {cookie_id: Cookie}
         self.client_addresses = {}  # Format: {addr: player_id}
-        self.game_state = GameState.MENU
+        self.game_state = GameState.LOBBY
         
         self.next_player_id = 1     # Incrementing player id
         self.lock = threading.Lock()  # For thread safety
@@ -115,7 +109,17 @@ class GameStateManager:
                             if cookie.locked_by is None or cookie.locked_by == player_id:
                                 cookie.locked_by = player_id
                                 cookie.update_position(self.players[player_id].mouse_pos)
-                                
+            elif data_obj.get("type") == "start_game":
+                # Only allow player 1 to start the game
+                player_id = self.client_addresses[addr]
+                if player_id == 1:
+                    self.start_game_flag = True
+                    print("Received start_game command from host.")
+            elif data_obj.get("type") == "reset_game":
+                player_id = self.client_addresses[addr]
+                if player_id == 1:
+                    self.reset_game_flag = True
+                    print("Received reset_game command.")
                                 
     def update_dragged_cookies(self):
         with self.lock:
@@ -144,6 +148,33 @@ class GameStateManager:
         """
         with self.lock:
             return list(self.client_addresses.keys())
+    def update_state_transitions(self):
+        # Transition from LOBBY to PLAYING:
+        if self.game_state == GameState.LOBBY:
+            # Example condition: if at least 1 player has joined and a 'start' flag is set
+            # You can set this flag in handle_message when a host's start command is received.
+            if getattr(self, 'start_game_flag', False):
+                self.game_state = GameState.PLAYING
+                print("Transition: LOBBY -> PLAYING")
+                # Reset flag so it doesn't repeatedly trigger
+                self.start_game_flag = False
+        
+        # Transition from PLAYING to GAME_OVER:
+        elif self.game_state == GameState.PLAYING:
+            # Example condition: all cookies are snapped to a plate (i.e. locked by a player)
+            all_snapped = all(cookie.locked_by is not None for cookie in self.cookies.values())
+            if all_snapped:
+                self.game_state = GameState.GAME_OVER
+                print("Transition: PLAYING -> GAME_OVER")
+        
+        # Transition from GAME_OVER back to LOBBY:
+        elif self.game_state == GameState.GAME_OVER:
+            # Example condition: a reset flag is set or a certain timeout expires
+            if getattr(self, 'reset_game_flag', False):
+                self.game_state = GameState.LOBBY
+                print("Transition: GAME_OVER -> LOBBY")
+                # Optionally, reset game state (e.g., reinitialize cookies, players remain, etc.)
+                self.reset_game_flag = False
         
     @staticmethod
     def calculate_plate_position(player_index, screen_width, screen_height, margin=30, plate_radius=150):

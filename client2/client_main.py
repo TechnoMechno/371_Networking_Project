@@ -15,9 +15,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND_COLOR, COOKIE_SIZE, REGULAR_COOKIE_IMAGE, STAR_COOKIE_IMAGE, PLATE_IMAGE
 from client_networking import ClientNetworking
-from client_gameState import ClientGameState
+from client2.client_gameManager import ClientGameManager
 from render import load_assets, render
 
+#SERVER_IP = "142.58.214.104"
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 5555
 
@@ -48,7 +49,7 @@ def main():
     assets = load_assets()  # load_assets() taken from 'render.py'
 
     # Initialize game state
-    game_state = ClientGameState()
+    game_state = ClientGameManager()
     
     # Initialize networking and start receiving messages
     networking = ClientNetworking(SERVER_IP, SERVER_PORT)

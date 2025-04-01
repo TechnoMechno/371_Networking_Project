@@ -34,9 +34,8 @@ def main():
     try:
         while True:
             # Get the current state as a dictionary
-            
+            game_manager.update_state_transitions()
             data = game_manager.get_game_data()
-            
             message = json.dumps(data)
             # Broadcast state to all connected clients
             game_manager.update_dragged_cookies()
