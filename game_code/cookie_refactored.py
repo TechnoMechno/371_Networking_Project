@@ -1,6 +1,7 @@
 import pygame
 import math
 from game_code.config import REGULAR_COOKIE_IMAGE, STAR_COOKIE_IMAGE, COOKIE_SIZE
+import random
 
 class Cookie:
     def __init__(self, cookie_id, position, type="regular"):
@@ -48,8 +49,15 @@ class Cookie:
         dy = self.position[1] - plate_pos[1]
         distance = math.hypot(dx, dy)
         if distance < plate_radius:
+            # Get a random position so that cookie is not always in the centre.
+            angle = random.uniform(0, 2 * math.pi)
+            radius_offset = random.uniform(0, plate_radius - self.radius)
+
+            offset_x = math.cos(angle) * radius_offset
+            offset_y = math.sin(angle) * radius_offset
+
             # Snap the cookie to the plate's center.
-            self.position = plate_pos.copy()
+            self.position = (plate_pos[0] + offset_x, plate_pos[1] + offset_y)
             self.on_plate = player.plate
             return True
         else:
