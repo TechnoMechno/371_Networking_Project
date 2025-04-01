@@ -140,11 +140,11 @@ if mode_selection == "start":
     print("Starting as server + client")
 
     # Run the server in a thread
-    server_thread = threading.Thread(target=run_server, daemon=True)
+    server_thread = threading.Thread(target=server_main.main, daemon=True)
     server_thread.start()
 
     # Run the client in the main thread
-    run_client()
+    client_main.main()
 
 elif mode_selection == "join":
     print("Joining as client only")
