@@ -117,6 +117,8 @@ class GameStateManager:
                     self.reset_game_flag = True
                     # Reset all players' scores and cookies
                     print("Received reset_game command.")
+                else:
+                    print(f"Player {player_id} attempted to reset the game but is not authorized.")
                                 
     def update_dragged_cookies(self):
         with self.lock:

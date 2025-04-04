@@ -3,16 +3,6 @@ import time
 import json
 import sys
 import os
-
-"""
-client_main.py - Entry point for the Cookie Dragging Game Client.
-This file initializes Pygame, loads assets, sets up the game state and networking,
-and runs the main game loop which handles input and rendering.
-"""
-
-# Add parent directory to sys.path so that game_code can be found
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND_COLOR, COOKIE_SIZE, REGULAR_COOKIE_IMAGE, STAR_COOKIE_IMAGE, PLATE_IMAGE, GameState
 from .client_networking import ClientNetworking
 from .client_gameManager import ClientGameManager
@@ -41,6 +31,16 @@ def find_top_cookie(mouse_pos, cookies):
             return str(cid)
     return None
 
+def draw_status_text(screen, status_message):
+    """
+    Renders a status message in brown at the center of the screen.
+    """
+    font = pygame.font.SysFont(None, 48)
+    BROWN = (165, 42, 42)  # Brown color
+    text_surface = font.render(status_message, True, BROWN)
+    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+    screen.blit(text_surface, text_rect)
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -60,12 +60,9 @@ def main():
 
     dragging_cookie = None
     
-    # Create UI elements. We'll create different ones based on game state.
-    # For example, in MENU or LOBBY state, we want a "Start Game" button.
+    # Create UI elements. Host (player 1) will see a button.
     start_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
-    # In GAME_OVER state, we want a "Reset Game" button.
     reset_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Reset Game", (128, 0, 0))
-    # Also, you might have a TextBox for entering a name in the MENU state.
     name_box = TextBox((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 50, 200, 40), "Enter Name")
 
     running = True
@@ -75,18 +72,20 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             if game_manager.game_state == GameState.LOBBY.value:
-                if start_button.handle_event(event):
-                    # When Start Game is clicked, send a start_game message.
-                    networking.send_message({"type": "start_game"})
-                    print("Start game message sent")
+                # Only allow host (player 1) to send the start_game command.
+                if game_manager.assigned_player_id == 1:
+                    if start_button.handle_event(event):
+                        networking.send_message({"type": "start_game"})
+                        print("Start game message sent")
             elif game_manager.game_state == GameState.GAME_OVER.value:
-                if reset_button.handle_event(event):
-                    networking.send_message({"type": "reset_game"})
-                    print("Reset game message sent")
+                # Only allow host to send reset_game command.
+                if game_manager.assigned_player_id == 1:
+                    if reset_button.handle_event(event):
+                        networking.send_message({"type": "reset_game"})
+                        print("Reset game message sent")
             elif game_manager.game_state == GameState.PLAYING.value:
-                # HANDLE COOKIE DRAGGING IN PLAYING STATTE    
+                # Handle cookie dragging in PLAYING state.
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    # Use collision check to find which cookie is under the cursor
                     dragging_cookie = find_top_cookie(current_mouse_pos, game_manager.cookies)
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     dragging_cookie = None
@@ -97,17 +96,24 @@ def main():
             "position": current_mouse_pos,
             "dragged_cookie": dragging_cookie
         }
-
         networking.send_message(update_msg)
 
+        # Render game objects.
+        render(screen, game_manager, assets, game_manager.assigned_player_id)
+        
+        # Render UI based on game state and player role.
         if game_manager.game_state == GameState.LOBBY.value:
-            start_button.draw(screen)
+            if game_manager.assigned_player_id == 1:
+                start_button.draw(screen)
+            else:
+                draw_status_text(screen, "waiting for players")
         elif game_manager.game_state == GameState.GAME_OVER.value:
-            render(screen, game_manager, assets, game_manager.assigned_player_id)
-            reset_button.draw(screen)
-        elif game_manager.game_state == GameState.PLAYING.value:
-            render(screen, game_manager, assets, game_manager.assigned_player_id)
-
+            if game_manager.assigned_player_id == 1:
+                reset_button.draw(screen)
+            else:
+                draw_status_text(screen, "game ended - waiting for host")
+        # In PLAYING state, no extra UI is needed; players see only the game.
+        
         pygame.display.flip()
         clock.tick(60)
     
