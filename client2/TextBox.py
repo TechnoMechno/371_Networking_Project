@@ -2,39 +2,52 @@ import pygame
 
 class TextBox:
     def __init__(self, rect, text, font_name='Arial', font_size=24, 
-                 bg_color=(0, 0, 0), text_color=(255, 255, 255), border_color=(255,255,255), border_width=2):
+                 bg_color=(220, 220, 220), text_color=(0, 0, 0), 
+                 placeholder_color=(150, 150, 150), border_color=(0, 0, 0), border_width=2):
         """
         Initializes a text box.
-
-        Parameters:
-            rect (tuple or pygame.Rect): The area for the text box (x, y, width, height).
-            text (str): The text to display.
-            font_name (str): The name of the font to use.
-            font_size (int): The size of the font.
-            bg_color (tuple): The background color (RGB).
-            text_color (tuple): The text color (RGB).
-            border_color (tuple): The border color (RGB).
-            border_width (int): The width of the border.
         """
         self.rect = pygame.Rect(rect)
-        self.text = text
+        self.text = ""  # User-entered text
+        self.default_text = text  # Placeholder text
         self.bg_color = bg_color
         self.text_color = text_color
+        self.placeholder_color = placeholder_color  # Faded color for default text
         self.border_color = border_color
         self.border_width = border_width
         self.font = pygame.font.SysFont(font_name, font_size)
+        self.active = False  # Whether this box is currently active
 
-    def draw(self, screen):
-        # Draw background
+    def draw(self, screen, blink=False):
+        # Draw background and border
         pygame.draw.rect(screen, self.bg_color, self.rect)
-        # Draw border
         pygame.draw.rect(screen, self.border_color, self.rect, self.border_width)
-        # Render the text
-        text_surface = self.font.render(self.text, True, self.text_color)
-        # Center text within the rect
-        text_rect = text_surface.get_rect(center=self.rect.center)
+        
+        # Choose which text and color to display:
+        if self.text:
+            display_text = self.text
+            display_color = self.text_color
+        else:
+            display_text = self.default_text
+            display_color = self.placeholder_color
+
+        # Add blinking cursor if active.
+        if self.active and blink:
+            display_text += "|"
+            
+        text_surface = self.font.render(display_text, True, display_color)
+        # Left-align with a little padding; adjust as needed.
+        text_rect = text_surface.get_rect(midleft=(self.rect.x + 10, self.rect.centery))
         screen.blit(text_surface, text_rect)
 
-    def set_text(self, new_text):
-        """Update the text displayed in the text box."""
-        self.text = new_text
+    def add_char(self, char):
+        self.text += char
+
+    def remove_char(self):
+        self.text = self.text[:-1]
+
+    def set_active(self, active):
+        self.active = active
+
+    def get_text(self):
+        return self.text

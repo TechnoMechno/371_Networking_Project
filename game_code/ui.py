@@ -1,6 +1,5 @@
 # ui.py
 import pygame
-from config import *
 
 def draw_cookies(screen, cookies):
     for cookie in cookies:

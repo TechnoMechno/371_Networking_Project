@@ -1,13 +1,14 @@
 import pygame
 
 class Button:
-    def __init__(self, rect, text, bg_color, text_color=(255, 255, 255), font_size=24):
+    def __init__(self, rect, text, bg_color, text_color=(255, 255, 255), font_size=24, callback=None):
         self.rect = pygame.Rect(rect)
         self.text = text
         self.bg_color = bg_color
         self.text_color = text_color
         self.font = pygame.font.SysFont('Arial', font_size)
         self.clicked = False
+        self.callback = callback
 
     def draw(self, screen):
         # Draw button rectangle
@@ -26,5 +27,7 @@ class Button:
             print(f"Button.handle_event: event.pos = {event.pos}, button rect = {self.rect}")
             if self.is_clicked(event.pos):
                 self.clicked = True
+                if self.callback:
+                    self.callback()
                 return True
         return False
