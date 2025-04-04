@@ -12,7 +12,7 @@ REGULAR_COOKIE_IMAGE = os.path.join(ASSETS_DIR, "cookie.png")
 STAR_COOKIE_IMAGE = os.path.join(ASSETS_DIR, "starcookie.png")
 PLATE_IMAGE = os.path.join(ASSETS_DIR, "plate.png")
 HOST = "0.0.0.0"
-UDP_PORT = 5555
+UDP_PORT = 55555
 
 # COLOURS
 CREAM = (255, 241, 208)          # Warm cream background
