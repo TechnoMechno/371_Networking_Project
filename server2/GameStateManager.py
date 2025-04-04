@@ -116,8 +116,6 @@ class GameStateManager:
                 if player_id == 1:
                     self.reset_game_flag = True
                     # Reset all players' scores and cookies
-                    for player in self.player.values():
-                        player.score = 0 
                     print("Received reset_game command.")
                                 
     def update_dragged_cookies(self):
@@ -185,10 +183,32 @@ class GameStateManager:
         # Transition from GAME_OVER back to LOBBY:
         elif self.game_state == GameState.GAME_OVER:
             if getattr(self, 'reset_game_flag', False):
-                self.game_state = GameState.LOBBY
-                print("Transition: GAME_OVER -> LOBBY")
-                self.reset_game_flag = False
-        
+                self.reset_game()
+    
+    def reset_game(self):
+        # Reset player scores.
+        for player in self.players.values():
+            player.score = 0
+
+        # Reinitialize cookies.
+        self.cookies = {}
+        spread_radius = 150  # Use the same spread value as before.
+        for i in range(COOKIE_COUNT):
+            r = spread_radius * math.sqrt(random.random())
+            theta = random.uniform(0, 2 * math.pi)
+            x = self.central_plate.position[0] + r * math.cos(theta)
+            y = self.central_plate.position[1] + r * math.sin(theta)
+            cookie_type = "star" if i % 2 == 0 else "regular"
+            self.cookies[i] = Cookie(cookie_id=i, position=[x, y])
+    
+        # Optionally, if your Cookie class has additional state (e.g., locked_by, on_plate),
+        # the new Cookie objects will start in their default state.
+    
+        # Reset the game state to LOBBY and clear the reset flag.
+        self.game_state = GameState.LOBBY
+        self.reset_game_flag = False
+        print("Transition: GAME_OVER -> LOBBY")
+
     @staticmethod
     def calculate_plate_position(player_index, screen_width, screen_height, margin=30, plate_radius=150):
         # For players 1 and 3, x is on the left; for 2 and 4, on the right.
