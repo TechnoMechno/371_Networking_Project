@@ -63,7 +63,10 @@ def main():
     # Create UI elements. Host (player 1) will see a button.
     start_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
     reset_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Reset Game", (128, 0, 0))
+    join_game_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 100, 200, 50), "Join Game", (0, 128, 255))
     name_box = TextBox((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 50, 200, 40), "Enter Name")
+
+    in_menu = False
 
     running = True
     while running:
@@ -71,24 +74,26 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if game_manager.game_state == GameState.LOBBY.value:
-                # Only allow host (player 1) to send the start_game command.
-                if game_manager.assigned_player_id == 1:
-                    if start_button.handle_event(event):
-                        networking.send_message({"type": "start_game"})
-                        print("Start game message sent")
-            elif game_manager.game_state == GameState.GAME_OVER.value:
-                # Only allow host to send reset_game command.
-                if game_manager.assigned_player_id == 1:
-                    if reset_button.handle_event(event):
-                        networking.send_message({"type": "reset_game"})
-                        print("Reset game message sent")
-            elif game_manager.game_state == GameState.PLAYING.value:
-                # Handle cookie dragging in PLAYING state.
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    dragging_cookie = find_top_cookie(current_mouse_pos, game_manager.cookies)
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    dragging_cookie = None
+
+            if not in_menu:
+                if game_manager.game_state == GameState.LOBBY.value:
+                    # Only allow host (player 1) to send the start_game command.
+                    if game_manager.assigned_player_id == 1:
+                        if start_button.handle_event(event):
+                            networking.send_message({"type": "start_game"})
+                            print("Start game message sent")
+                elif game_manager.game_state == GameState.GAME_OVER.value:
+                    # Only allow host to send reset_game command.
+                    if game_manager.assigned_player_id == 1:
+                        if reset_button.handle_event(event):
+                            networking.send_message({"type": "reset_game"})
+                            print("Reset game message sent")
+                elif game_manager.game_state == GameState.PLAYING.value:
+                    # Handle cookie dragging in PLAYING state.
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        dragging_cookie = find_top_cookie(current_mouse_pos, game_manager.cookies)
+                    elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                        dragging_cookie = None
 
         # Send unified update message every frame.
         update_msg = {

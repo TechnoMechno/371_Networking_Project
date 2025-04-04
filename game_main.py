@@ -100,6 +100,11 @@ def ip_input_screen():
     # Create a "Go Back" button.
     back_button = Button(rect=(20, HEIGHT - 70, 150, 50), text="Go Back", bg_color=BROWN, 
                          text_color=WHITE, font_size=24, callback=None)
+
+
+    # Create a "Join Game" button.
+    join_button = Button(rect=(WIDTH / 2 + 130, HEIGHT - 70, 150, 50), text="Join Game", bg_color=BROWN, 
+                         text_color=WHITE, font_size=24, callback=None)
     
     # Start with the IP box active.
     ip_box.set_active(True)
@@ -137,6 +142,13 @@ def ip_input_screen():
                 elif back_button.rect.collidepoint(event.pos):
                     # Go back to the main menu.
                     return None
+                elif join_button.rect.collidepoint(event.pos):
+                    # Join button clicked.
+                    ip_text = ip_box.get_text().strip()
+                    port_text = port_box.get_text().strip()
+                    if ip_text and port_text.isdigit():
+                        return ip_text, int(port_text)
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_TAB:
                     if active_box == ip_box:
@@ -165,6 +177,7 @@ def ip_input_screen():
         ip_box.draw(screen, blink)
         port_box.draw(screen, blink)
         back_button.draw(screen)  # Draw the "Go Back" button
+        join_button.draw(screen)  # Draw the "Join Game" button
         
         pygame.display.flip()
         clock.tick(60)
