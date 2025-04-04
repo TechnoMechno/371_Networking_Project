@@ -1,8 +1,6 @@
 import pygame
 import sys
 import threading
-import socket
-import ipaddress  # For IP validation
 
 # Import your main functions for the game logic
 from client2 import client_main 
@@ -36,9 +34,9 @@ if cookie_img is not None:
         (WIDTH - 50 - 64, 30),                           # Top-right
         (30, HEIGHT - 30 - 64),                          # Bottom-left
         (WIDTH - 30 - 64, HEIGHT - 30 - 64),              # Bottom-right
-        (WIDTH//2 - 32, HEIGHT / 2 - 50),                # Top-center
+        (WIDTH//2 - 32, HEIGHT / 2 - 50),                             # Top-center
         (10, HEIGHT//2 - 40),                            # Middle-left
-        (WIDTH - 150, HEIGHT//2 - 24)                    # Middle-right
+        (WIDTH - 150, HEIGHT//2 - 24)                # Middle-right
     ]
 
 # --- Global variable for menu selection ---
@@ -85,35 +83,11 @@ def set_mode(selection):
     global mode_selection
     mode_selection = selection
 
-# --- Port Check Function ---
-def is_port_open(ip_address, port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(1)
-    result = sock.connect_ex((ip_address, port))
-    sock.close()
-    return result  
-
-# --- IP and Port Validation Functions ---
-def is_valid_ip(ip):
-    try:
-        ipaddress.ip_address(ip)
-        return True
-    except ValueError:
-        return False
-
-def is_valid_port(port):
-    try:
-        port = int(port)
-        return 1 <= port <= 65535
-    except ValueError:
-        return False
-
 # --- IP Input Screen (for joining a game) ---
 def ip_input_screen():
     clock = pygame.time.Clock()
     blink = True
     blink_timer = 0
-    error_message = None  # To hold error message if join fails
 
     # Create text boxes for IP and Port input with white background and brown border.
     ip_box = TextBox(rect=(WIDTH // 2 - 150, 160, 300, 40), text="Enter IP", 
@@ -126,6 +100,8 @@ def ip_input_screen():
     # Create a "Go Back" button.
     back_button = Button(rect=(20, HEIGHT - 70, 150, 50), text="Go Back", bg_color=BROWN, 
                          text_color=WHITE, font_size=24, callback=None)
+
+
     # Create a "Join Game" button.
     join_button = Button(rect=(WIDTH / 2 + 130, HEIGHT - 70, 150, 50), text="Join Game", bg_color=BROWN, 
                          text_color=WHITE, font_size=24, callback=None)
@@ -134,31 +110,9 @@ def ip_input_screen():
     ip_box.set_active(True)
     active_box = ip_box
 
-    # Function to attempt joining using the current text box values.
-    def attempt_join():
-        nonlocal error_message
-        ip_text = ip_box.get_text().strip()
-        port_text = port_box.get_text().strip()
-        # Validate non-empty inputs.
-        if not ip_text or not port_text:
-            error_message = "IP and Port cannot be empty."
-            return None
-        # Validate IP address.
-        if not is_valid_ip(ip_text):
-            error_message = "Invalid IP address."
-            return None
-        # Validate port number.
-        if not port_text.isdigit() or not is_valid_port(port_text):
-            error_message = "Invalid port number."
-            return None
-        # Check if port is open.
-        if is_port_open(ip_text, int(port_text)):
-            error_message = "No server is running under " + ip_text + ":" + port_text
-            return None
-        return ip_text, int(port_text)
-
     running = True
     while running:
+        # Use the same background as the main menu.
         screen.fill(CREAM)
         if cookie_img is not None:
             for pos in cookie_positions:
@@ -170,11 +124,12 @@ def ip_input_screen():
             "Click boxes or press [Tab] to switch, [Enter] to confirm", True, BROWN)
         screen.blit(label, (WIDTH // 2 - label.get_width() // 2, 90))
         
+        # Process events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            # Handle mouse clicks
+            # Check for mouse clicks on the text boxes or Go Back button.
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if ip_box.rect.collidepoint(event.pos):
                     ip_box.set_active(True)
@@ -205,9 +160,10 @@ def ip_input_screen():
                         ip_box.set_active(True)
                         active_box = ip_box
                 elif event.key == pygame.K_RETURN:
-                    result = attempt_join()
-                    if result:
-                        return result
+                    ip_text = ip_box.get_text().strip()
+                    port_text = port_box.get_text().strip()
+                    if ip_text and port_text.isdigit():
+                        return ip_text, int(port_text)
                 elif event.key == pygame.K_BACKSPACE:
                     active_box.remove_char()
                 else:
@@ -231,7 +187,7 @@ while True:
     main_menu()  # Show main menu.
     if mode_selection == "start":
         print("Starting as server + client")
-        # Run the server in a separate thread.
+        # Run the server in a thread.
         server_thread = threading.Thread(target=server_main.main, daemon=True)
         server_thread.start()
         # Run the client in the main thread.
@@ -241,6 +197,7 @@ while True:
         print("Joining as client only")
         result = ip_input_screen()
         if result is None:
+            # "Go Back" was pressed; return to the main menu.
             mode_selection = None
             continue
         else:
@@ -253,4 +210,3 @@ while True:
 
 pygame.quit()
 sys.exit()
-
