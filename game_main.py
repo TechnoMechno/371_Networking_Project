@@ -1,6 +1,8 @@
 import pygame
 import sys
 import threading
+import socket 
+import ipaddress
 
 # Import your main functions for the game logic
 from client2 import client_main 
@@ -88,6 +90,7 @@ def ip_input_screen():
     clock = pygame.time.Clock()
     blink = True
     blink_timer = 0
+    error_message = None
 
     # Create text boxes for IP and Port input with white background and brown border.
     ip_box = TextBox(rect=(WIDTH // 2 - 150, 160, 300, 40), text="Enter IP", 
@@ -109,6 +112,27 @@ def ip_input_screen():
     # Start with the IP box active.
     ip_box.set_active(True)
     active_box = ip_box
+
+    # Attempt to join using the current text box values.
+    def attempt_join():
+        nonlocal error_message
+        ip_text = ip_box.get_text().strip()
+        port_text = port_box.get_text().strip()
+        # Validate non-empty inputs.
+        if not ip_text or not port_text:
+            error_message = "IP and Port cannot be empty."
+            return None
+        # Validate IP address.
+        if not is_valid_ip(ip_text):
+            error_message = "Invalid IP address."
+            return None
+        # Validate port number.
+        if not port_text.isdigit() or not is_valid_port(port_text):
+            error_message = "Invalid port number."
+            return None
+        # Check if port is open.
+        return ip_text, int(port_text)
+
 
     running = True
     while running:
@@ -143,11 +167,9 @@ def ip_input_screen():
                     # Go back to the main menu.
                     return None
                 elif join_button.rect.collidepoint(event.pos):
-                    # Join button clicked.
-                    ip_text = ip_box.get_text().strip()
-                    port_text = port_box.get_text().strip()
-                    if ip_text and port_text.isdigit():
-                        return ip_text, int(port_text)
+                    result = attempt_join()
+                    if result:
+                        return result
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_TAB:
@@ -179,8 +201,37 @@ def ip_input_screen():
         back_button.draw(screen)  # Draw the "Go Back" button
         join_button.draw(screen)  # Draw the "Join Game" button
         
+        if error_message:
+            error_surface = pygame.font.SysFont("Arial", 20).render(error_message, True, (255, 0, 0))
+            screen.blit(error_surface, (WIDTH // 2 - error_surface.get_width() // 2, 300))
+        
+
         pygame.display.flip()
         clock.tick(60)
+
+# --- Port Check Function ---
+def is_port_open(ip_address, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+    result = sock.connect_ex((ip_address, port))
+    sock.close()
+    return result  
+
+# --- IP and Port Validation Functions ---
+def is_valid_ip(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
+
+def is_valid_port(port):
+    try:
+        port = int(port)
+        return 1 <= port <= 65535
+    except ValueError:
+        return False
+
 
 # --- Main Program Loop ---
 while True:
