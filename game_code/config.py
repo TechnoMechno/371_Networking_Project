@@ -14,6 +14,13 @@ PLATE_IMAGE = os.path.join(ASSETS_DIR, "plate.png")
 HOST = "0.0.0.0"
 UDP_PORT = 5555
 
+# COLOURS
+CREAM = (255, 241, 208)          # Warm cream background
+BROWN = (101, 67, 33)            # Deep brown for title and buttons
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+
 class GameState(enum.Enum):
     LOBBY = 1
     PLAYING = 2

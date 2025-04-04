@@ -29,4 +29,5 @@ class ClientGameManager:
             self.cookies = msg.get("cookies", {})
             self.players = msg.get("players", {})
             self.game_state = msg.get("game_state")
+            self.scoreboard = msg.get("scoreboard", {})
             

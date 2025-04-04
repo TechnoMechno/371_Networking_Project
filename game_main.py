@@ -6,18 +6,13 @@ import threading
 from client2 import client_main 
 from server2 import server_main
 from client2.Button import Button  
-from client2.TextBox import TextBox 
+from client2.TextBox import TextBox
+from game_code.config import CREAM, BROWN, WHITE, BLACK 
 
 pygame.init()
 WIDTH, HEIGHT = 600, 400
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cookie Grabber")
-
-# --- Colors ---
-CREAM = (255, 241, 208)          # Warm cream background
-BROWN = (101, 67, 33)            # Deep brown for title and buttons
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
 
 # --- Fonts ---
 title_font = pygame.font.SysFont("comicsansms", 64)
@@ -36,12 +31,12 @@ cookie_positions = []
 if cookie_img is not None:
     cookie_positions = [
         (30, 30),                                      # Top-left
-        (WIDTH - 30 - 64, 30),                           # Top-right
+        (WIDTH - 50 - 64, 30),                           # Top-right
         (30, HEIGHT - 30 - 64),                          # Bottom-left
         (WIDTH - 30 - 64, HEIGHT - 30 - 64),              # Bottom-right
-        (WIDTH//2 - 32, 10),                             # Top-center
-        (10, HEIGHT//2 - 32),                            # Middle-left
-        (WIDTH - 10 - 64, HEIGHT//2 - 32)                # Middle-right
+        (WIDTH//2 - 32, HEIGHT / 2 - 50),                             # Top-center
+        (10, HEIGHT//2 - 40),                            # Middle-left
+        (WIDTH - 150, HEIGHT//2 - 24)                # Middle-right
     ]
 
 # --- Global variable for menu selection ---
