@@ -57,7 +57,14 @@ class GameStateManager:
         with self.lock:
             # Register new client if not present
             if addr not in self.client_addresses:
-                if self.next_player_id <= 4:  # Limit to 4 players
+                # If game is in session, nodify the client that it cannot join.
+                if self.game_state != GameState.LOBBY:
+                    alert_msg = {"type": "game_in_session"}
+                    udp_socket.sendto(json.dumps(alert_msg).encode(), addr)
+                    return 
+                
+                # If there is room for a new player (limit to 4 players)
+                if self.next_player_id <= 4:  
                     player_id = self.next_player_id
                     self.next_player_id += 1
                     self.client_addresses[addr] = player_id

@@ -1,5 +1,6 @@
 import socket
 import json
+from game_code.config import GameState
 
 # -------------------------------------------------------------
 # This module provides helper functions for UDP networking.
@@ -25,18 +26,29 @@ def broadcast_udp(sock, message, client_addresses):
 
 def receive_messages(sock, game_manager):
     """
-    Continuously receives messages on the UDP socket and delegates processing
-    to the game_manager.
+    Continuously receives messages on the UDP socket.
+    For handshake requests (JOIN_CHECK), if a client is new and the game is not in the LOBBY state,
+    send a JSON response indicating that the game is in session.
+    Otherwise, reply with a plain 'PONG'.
+    All other messages are passed to the game manager.
     """
     while True:
         try:
             data, addr = sock.recvfrom(4096)
-            message = data.decode()
-            # Handle handshake 
-            if message == 'PING':
-                sock.sendto('PONG'.encode(), addr)
-                continue
-            # Delegate message handling to game_manager
+            message = data.decode().strip()
+            if message == "JOIN_CHECK":
+                with game_manager.lock:
+                    # If client is new and game is not in LOBBY, send game_in_session response.
+                    if addr not in game_manager.client_addresses and game_manager.game_state != GameState.LOBBY:
+                        response = json.dumps({
+                            "type": "game_in_session",
+                            "message": "Game is already in session. Cannot join."
+                        })
+                        sock.sendto(response.encode(), addr)
+                    else:
+                        sock.sendto("PONG".encode(), addr)
+                continue  # Do not process further
+            # Otherwise, delegate the message to the game manager.
             game_manager.handle_message(message, addr, sock)
         except socket.timeout:
             continue

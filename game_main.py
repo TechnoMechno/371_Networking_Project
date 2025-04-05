@@ -4,6 +4,7 @@ import threading
 import socket
 import ipaddress  # For IP validation
 import errno
+import json
 
 # Import your main functions for the game logic
 from client2 import client_main 
@@ -45,29 +46,38 @@ if cookie_img is not None:
 # --- Global variable for menu selection ---
 mode_selection = None
 
-# --- Handshake Function for UDP ---
+# --- Handshake Function for UDP with JOIN_CHECK ---
 def is_server_listening(ip_address, port):
     """
-    Send a UDP 'PING' message and expect a 'PONG' reply.
-    Returns True if the correct response is received within the timeout, else False.
+    Send a UDP 'JOIN_CHECK' message and expect either:
+      - A plain text 'PONG' if join is allowed, or
+      - A JSON message with type "game_in_session" if the game is already in session.
+    Returns a tuple: (success: bool, error_message: str or None)
     """
-    test_message = "PING"
-    expected_response = "PONG"
+    test_message = "JOIN_CHECK"
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.settimeout(1)  # 1-second timeout for a response
     try:
         sock.sendto(test_message.encode(), (ip_address, port))
         data, addr = sock.recvfrom(1024)
-        if data.decode().strip() == expected_response:
-            return True
+        response_str = data.decode().strip()
+        # Try to interpret the response as JSON.
+        try:
+            response_obj = json.loads(response_str)
+            if response_obj.get("type") == "game_in_session":
+                return False, response_obj.get("message", "Game is already in session. Cannot join.")
+        except json.JSONDecodeError:
+            # Not JSON; assume it's a plain text response.
+            if response_str == "PONG":
+                return True, None
+            else:
+                return False, "Unexpected handshake response: " + response_str
     except socket.timeout:
-        return False
+        return False, "No server running on IP: " + ip_address + " and port: " + str(port)
     except Exception as e:
-        print("Handshake error:", e)
-        return False
+        return False, "Handshake error: " + str(e)
     finally:
         sock.close()
-    return False
 
 # --- Main Menu Loop Function ---
 def main_menu():
@@ -157,9 +167,10 @@ def ip_input_screen():
         if not port_text.isdigit() or not is_valid_port(port_text):
             error_message = "Invalid port number."
             return None
-        # Use UDP handshake to check for server availability
-        if not is_server_listening(ip_text, int(port_text)):
-            error_message = "No server running on IP: " + ip_text + " and port: " + port_text
+        # Use the handshake to check for server availability and join permission.
+        success, err = is_server_listening(ip_text, int(port_text))
+        if not success:
+            error_message = err
             return None
         return ip_text, int(port_text)
 
