@@ -32,6 +32,10 @@ def receive_messages(sock, game_manager):
         try:
             data, addr = sock.recvfrom(4096)
             message = data.decode()
+            # Handle handshake 
+            if message == 'PING':
+                sock.sendto('PONG'.encode(), addr)
+                continue
             # Delegate message handling to game_manager
             game_manager.handle_message(message, addr, sock)
         except socket.timeout:

@@ -11,7 +11,7 @@ from .Button import Button
 from .TextBox import TextBox
 
 #SERVER_IP = "142.58.214.104"
-SERVER_IP = "0.0.0.0"
+SERVER_IP = "127.0.0.1"
 SERVER_PORT = 55555
 
 def find_top_cookie(mouse_pos, cookies):
