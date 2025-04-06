@@ -62,7 +62,7 @@ def main():
     
     # Create UI elements. Host (player 1) will see a button.
     start_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
-    reset_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Reset Game", (128, 0, 0))
+    reset_button = Button((SCREEN_WIDTH//2 - 65, SCREEN_HEIGHT//1.7, 120, 35), "Restart", (0, 0, 0))
     name_box = TextBox((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 50, 200, 40), "Enter Name")
 
     running = True
@@ -71,6 +71,14 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+            # ✅ KEYDOWN event for pressing "R"
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r and game_manager.game_state == GameState.GAME_OVER.value:
+                    if game_manager.assigned_player_id == 1:
+                        networking.send_message({"type": "reset_game"})
+                        print("[DEBUG] Sent reset_game")
+
             if game_manager.game_state == GameState.LOBBY.value:
                 # Only allow host (player 1) to send the start_game command.
                 if game_manager.assigned_player_id == 1:
@@ -99,7 +107,7 @@ def main():
         networking.send_message(update_msg)
 
         # Render game objects.
-        render(screen, game_manager, assets, game_manager.assigned_player_id)
+        render(screen, game_manager, assets, game_manager.assigned_player_id, reset_button)
         
         # Render UI based on game state and player role.
         if game_manager.game_state == GameState.LOBBY.value:
@@ -107,11 +115,11 @@ def main():
                 start_button.draw(screen)
             else:
                 draw_status_text(screen, "waiting for players")
-        elif game_manager.game_state == GameState.GAME_OVER.value:
-            if game_manager.assigned_player_id == 1:
-                reset_button.draw(screen)
-            else:
-                draw_status_text(screen, "game ended - waiting for host")
+        # elif game_manager.game_state == GameState.GAME_OVER.value:
+        #     if game_manager.assigned_player_id == 1:
+        #         reset_button.draw(screen)
+        #     else:
+        #         draw_status_text(screen, "game ended - waiting for host")
         # In PLAYING state, no extra UI is needed; players see only the game.
         
         pygame.display.flip()
