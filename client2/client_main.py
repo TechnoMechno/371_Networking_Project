@@ -61,12 +61,18 @@ def main():
     dragging_cookie = None
     
     # Create UI elements. Host (player 1) will see a button.
-    start_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
+    start_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Start Game", (101, 67, 33))
+    back_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 35, 200, 50), "Go Back", (101, 67, 33))
     reset_button = Button((SCREEN_WIDTH//2 - 65, SCREEN_HEIGHT//1.7, 120, 35), "Restart", (0, 0, 0))
+
+    # Text boxes for names, IP Address of the host or whatever, and port numbers
     name_box = TextBox((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 50, 200, 40), "Enter Name")
+    ip_box = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 275, 40), "Open IP Server: " + str(SERVER_IP))
+    port_box = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 275, 40), "Open Port: " + str(SERVER_PORT))
+
 
     running = True
-    while running:
+    while running: 
         current_mouse_pos = list(pygame.mouse.get_pos())
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -85,6 +91,12 @@ def main():
                     if start_button.handle_event(event):
                         networking.send_message({"type": "start_game"})
                         print("Start game message sent")
+                # Send a message to main to return to the main menu
+                if back_button.handle_event(event):
+                    print("Returning to Menu")
+                    networking.shutdown() # Clean up the networking stuff before going back to main menu
+                    return "Menu"
+                    
             elif game_manager.game_state == GameState.GAME_OVER.value:
                 # Only allow host to send reset_game command.
                 if game_manager.assigned_player_id == 1:
@@ -113,8 +125,14 @@ def main():
         if game_manager.game_state == GameState.LOBBY.value:
             if game_manager.assigned_player_id == 1:
                 start_button.draw(screen)
+                back_button.draw(screen)
+                ip_box.draw(screen)
+                port_box.draw(screen)
             else:
+                back_button.draw(screen)
                 draw_status_text(screen, "waiting for players")
+                ip_box.draw(screen)
+                port_box.draw(screen)
         # elif game_manager.game_state == GameState.GAME_OVER.value:
         #     if game_manager.assigned_player_id == 1:
         #         reset_button.draw(screen)
