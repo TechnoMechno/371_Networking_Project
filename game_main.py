@@ -249,7 +249,16 @@ while True:
         print("Starting as server + client")
         server_thread = threading.Thread(target=server_main.main, daemon=True)
         server_thread.start()
-        client_main.main()
+
+        # Checks if user wants to go back to the main menu.
+        result = client_main.main()
+        if result == "Menu":
+            # If we were running as server, shut it down
+            if mode_selection == "start" and server_thread is not None:
+                server_thread = None
+            # Reset state variables
+            mode_selection = None
+            continue
         break
     elif mode_selection == "join":
         print("Joining as client only")

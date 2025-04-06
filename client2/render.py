@@ -63,8 +63,6 @@ def render(screen, game_state, assets, assigned_player_id):
      # Render players' plates.
     for pid, player in game_state.players.items():
         plate_data = player.get("plate")
-        print(f"Player {pid} plate data:", plate_data) 
-        plate_data = player.get("plate")
         if plate_data:
             pos = plate_data.get("plate_position", [0, 0])
             radius = plate_data.get("plate_radius", 150)
