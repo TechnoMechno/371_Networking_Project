@@ -20,9 +20,7 @@ from server2 import server_main
 MENU_WIDTH, MENU_HEIGHT = 600, 400
 GAME_WIDTH, GAME_HEIGHT = SCREEN_WIDTH, SCREEN_HEIGHT
 
-##############################################
-# HANDSHAKE FUNCTION (PING / PONG)
-##############################################
+# handshake function for udp
 def is_server_listening(ip_address, port):
     """
     Send a UDP 'JOIN_CHECK' message to the server and expect:
@@ -122,9 +120,8 @@ def run_main_menu(screen):
         server_ip, server_port = "127.0.0.1", 55555
     return mode_selection, server_ip, server_port
 
-##############################################
-# IP INPUT SCREEN (for JOIN mode)
-##############################################
+
+# input screen to join
 def ip_input_screen(screen):
     clock = pygame.time.Clock()
     error_message = None
@@ -235,9 +232,8 @@ def ip_input_screen(screen):
         pygame.display.flip()
         clock.tick(60)
 
-##############################################
-# GAME LOOP (with "Back to Menu" Button)
-##############################################
+
+# run game - back to menu
 def run_game(screen, server_ip, server_port):
     # Resize window to game dimensions.
     pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
@@ -326,9 +322,7 @@ def run_game(screen, server_ip, server_port):
     pygame.quit()
     return True
 
-##############################################
-# CENTRALIZED MAIN LOOP (within client)
-##############################################
+# centralized loop within client
 def main():
     pygame.init()
     # Set initial window to menu dimensions.
