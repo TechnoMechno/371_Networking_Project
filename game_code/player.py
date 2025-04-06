@@ -15,15 +15,25 @@ class Player:
         """
         Convert player information to a dictionary for sending to clients.
         """
-        return {
+        data = {
             "player_id": self.player_id,
             "name": self.name,
             "score": self.score,
             "mouse_pos": self.mouse_pos,
-            # Address info is usually kept server-side, but you can include it if needed.
-            "address": self.address,
-            "dragging_cookie": self.dragging_cookie
+            "dragging_cookie": self.dragging_cookie,
+            # Don't include 'address' unless you really need it
+            # "address": self.address,
         }
+
+        # Include plate only if it exists
+        if self.plate:
+            data["plate"] = {
+                "plate_position": self.plate.position,
+                "plate_radius": self.plate.radius
+            }
+
+        return data
+        
     def gain_score(self, cookie):
     # Award points based on cookie type
         if cookie.type == "star":

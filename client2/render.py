@@ -53,22 +53,17 @@ def render(screen, game_state, assets, assigned_player_id):
       - Player cursors.
       - Scoreboard.
     """
+
     regular_img, star_img, plate_img = assets
     screen.fill(BACKGROUND_COLOR)
     
     # Render central plate.
     draw_central_plate(screen, game_state.central_plate, plate_img)
     
-    # Render cookies.
-    for cid, cookie in game_state.cookies.items():
-        pos = cookie.get("position", [0, 0])
-        ctype = cookie.get("cookie_type", "regular")
-        img = regular_img if ctype == "regular" else star_img
-        rect = img.get_rect(center=(int(pos[0]), int(pos[1])))
-        screen.blit(img, rect)
-    
-    # Render players' plates.
+     # Render players' plates.
     for pid, player in game_state.players.items():
+        plate_data = player.get("plate")
+        print(f"Player {pid} plate data:", plate_data) 
         plate_data = player.get("plate")
         if plate_data:
             pos = plate_data.get("plate_position", [0, 0])
@@ -76,6 +71,14 @@ def render(screen, game_state, assets, assigned_player_id):
             scaled_plate = pygame.transform.scale(plate_img, (radius * 2, radius * 2))
             rect = scaled_plate.get_rect(center=(int(pos[0]), int(pos[1])))
             screen.blit(scaled_plate, rect)
+            
+    # Render cookies.
+    for cid, cookie in game_state.cookies.items():
+        pos = cookie.get("position", [0, 0])
+        ctype = cookie.get("cookie_type", "regular")
+        img = regular_img if ctype == "regular" else star_img
+        rect = img.get_rect(center=(int(pos[0]), int(pos[1])))
+        screen.blit(img, rect)
     
     # Render player cursors.
     for pid, player in game_state.players.items():

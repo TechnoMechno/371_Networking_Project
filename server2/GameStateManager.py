@@ -156,6 +156,10 @@ class GameStateManager:
         Returns the full game state as a dictionary for broadcasting.
         This now includes a 'scoreboard' entry with each player's score and its designated corner position.
         """
+        # print("[SERVER DEBUG] Players being sent:", json.dumps({
+        # str(pid): player.to_dict() for pid, player in self.players.items()
+        # }, indent=2))
+
         with self.lock:
             state = {
                 "type": "update_state",
