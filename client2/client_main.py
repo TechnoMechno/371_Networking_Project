@@ -8,7 +8,6 @@ from .client_networking import ClientNetworking
 from .client_gameManager import ClientGameManager
 from .render import load_assets, render
 from .Button import Button
-from .TextBox import TextBox
 
 #SERVER_IP = "142.58.214.104"
 SERVER_IP = "127.0.0.1"
@@ -16,13 +15,12 @@ SERVER_PORT = 55555
 
 def find_top_cookie(mouse_pos, cookies):
     """
-    Given the current mouse position and the cookies dictionary (from server state),
+    Given the current mouse position and the cookies dictionary,
     returns the ID of the topmost cookie under the cursor.
     Assumes cookies with higher numeric IDs (converted from keys) are drawn on top.
     """
-    # Convert keys to integers, sort in descending order.
     for cid in sorted([int(k) for k in cookies.keys()], reverse=True):
-        cookie = cookies[str(cid)]  # assuming keys in the dict are strings
+        cookie = cookies[str(cid)]
         pos = cookie.get("position", [0, 0])
         radius = cookie.get("radius", 30)
         dx = mouse_pos[0] - pos[0]
@@ -36,34 +34,34 @@ def draw_status_text(screen, status_message):
     Renders a status message in brown at the center of the screen.
     """
     font = pygame.font.SysFont(None, 48)
-    BROWN = (165, 42, 42)  # Brown color
+    BROWN = (165, 42, 42)
     text_surface = font.render(status_message, True, BROWN)
-    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
     screen.blit(text_surface, text_rect)
 
-def main():
+def main(server_ip, server_port):
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Cookie Dragging Game Client")
     clock = pygame.time.Clock()
 
-    # Load image assets AFTER display is initialized
-    assets = load_assets()  # load_assets() taken from 'render.py'
+    # Load assets (make sure your render.py is set up accordingly)
+    assets = load_assets()
 
-    # Initialize game state
+    # Initialize game state and networking
     game_manager = ClientGameManager()
-    
-    # Initialize networking and start receiving messages
-    networking = ClientNetworking(SERVER_IP, SERVER_PORT)
+    networking = ClientNetworking(server_ip, server_port)
     networking.add_receive_callback(lambda msg: game_manager.handle_update(msg))
     networking.start_receiving()
 
     dragging_cookie = None
-    
-    # Create UI elements. Host (player 1) will see a button.
-    start_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
-    reset_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Reset Game", (128, 0, 0))
-    name_box = TextBox((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 50, 200, 40), "Enter Name")
+
+    # UI elements:
+    # - start_button and reset_button for host actions
+    # - back_button to return to the main menu
+    start_button = Button((SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 25, 200, 50), "Start Game", (0, 128, 0))
+    reset_button = Button((SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 25, 200, 50), "Reset Game", (128, 0, 0))
+    back_button = Button((10, 10, 120, 40), "Menu", (200, 0, 0))
 
     running = True
     while running:
@@ -71,14 +69,23 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                # Returning False here can signal a full exit (if you prefer)
+                return False
+
+            # Check if "Back to Menu" is pressed:
+            if back_button.handle_event(event):
+                # Exit game loop and return to main menu
+                running = False
+                return True
+
             if game_manager.game_state == GameState.LOBBY.value:
-                # Only allow host (player 1) to send the start_game command.
+                # Only host (player 1) can send the start_game command.
                 if game_manager.assigned_player_id == 1:
                     if start_button.handle_event(event):
                         networking.send_message({"type": "start_game"})
                         print("Start game message sent")
             elif game_manager.game_state == GameState.GAME_OVER.value:
-                # Only allow host to send reset_game command.
+                # Only host can send reset_game command.
                 if game_manager.assigned_player_id == 1:
                     if reset_button.handle_event(event):
                         networking.send_message({"type": "reset_game"})
@@ -100,8 +107,6 @@ def main():
 
         # Render game objects.
         render(screen, game_manager, assets, game_manager.assigned_player_id)
-        
-        # Render UI based on game state and player role.
         if game_manager.game_state == GameState.LOBBY.value:
             if game_manager.assigned_player_id == 1:
                 start_button.draw(screen)
@@ -112,13 +117,17 @@ def main():
                 reset_button.draw(screen)
             else:
                 draw_status_text(screen, "game ended - waiting for host")
-        # In PLAYING state, no extra UI is needed; players see only the game.
+        
+        # Always draw the back-to-menu button.
+        back_button.draw(screen)
         
         pygame.display.flip()
         clock.tick(60)
-    
+
     networking.shutdown()
     pygame.quit()
+    return True
+
 
 if __name__ == "__main__":
     main()

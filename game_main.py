@@ -1,28 +1,20 @@
 import pygame
 import sys
 import threading
-import socket
-import ipaddress  # For IP validation
-import errno
-import json
-
-# Import your main functions for the game logic
-from client2 import client_main 
 from server2 import server_main
+from client2.client_main import main as client_main
 from client2.Button import Button  
 from client2.TextBox import TextBox
-from game_code.config import CREAM, BROWN, WHITE, BLACK 
+from game_code.config import CREAM, BROWN, WHITE, BLACK
 
 pygame.init()
 WIDTH, HEIGHT = 600, 400
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cookie Grabber")
 
-# --- Fonts ---
+# --- Fonts & Assets ---
 title_font = pygame.font.SysFont("comicsansms", 64)
 button_font = pygame.font.SysFont("comicsansms", 30)
-
-# --- Load Cookie Asset ---
 try:
     cookie_img = pygame.image.load("Assets/cookie.png").convert_alpha()
     cookie_img = pygame.transform.scale(cookie_img, (64, 64))
@@ -30,7 +22,6 @@ except pygame.error as e:
     print("Error loading cookie asset:", e)
     cookie_img = None
 
-# --- Predefined Cookie Positions ---
 cookie_positions = []
 if cookie_img is not None:
     cookie_positions = [
@@ -43,45 +34,8 @@ if cookie_img is not None:
         (WIDTH - 150, HEIGHT//2 - 24)
     ]
 
-# --- Global variable for menu selection ---
-mode_selection = None
-
-# --- Handshake Function for UDP with JOIN_CHECK ---
-def is_server_listening(ip_address, port):
-    """
-    Send a UDP 'JOIN_CHECK' message and expect either:
-      - A plain text 'PONG' if join is allowed, or
-      - A JSON message with type "game_in_session" if the game is already in session.
-    Returns a tuple: (success: bool, error_message: str or None)
-    """
-    test_message = "JOIN_CHECK"
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.settimeout(1)  # 1-second timeout for a response
-    try:
-        sock.sendto(test_message.encode(), (ip_address, port))
-        data, addr = sock.recvfrom(1024)
-        response_str = data.decode().strip()
-        # Try to interpret the response as JSON.
-        try:
-            response_obj = json.loads(response_str)
-            if response_obj.get("type") == "game_in_session":
-                return False, response_obj.get("message", "Game is already in session. Cannot join.")
-        except json.JSONDecodeError:
-            # Not JSON; assume it's a plain text response.
-            if response_str == "PONG":
-                return True, None
-            else:
-                return False, "Unexpected handshake response: " + response_str
-    except socket.timeout:
-        return False, "No server running on IP: " + ip_address + " and port: " + str(port)
-    except Exception as e:
-        return False, "Handshake error: " + str(e)
-    finally:
-        sock.close()
-
-# --- Main Menu Loop Function ---
-def main_menu():
-    global mode_selection
+# --- Main Menu Function ---
+def run_main_menu():
     mode_selection = None
     buttons = [
         Button(rect=(200, 200, 200, 60), text="Start a Game", bg_color=BROWN, 
@@ -90,8 +44,12 @@ def main_menu():
                text_color=WHITE, font_size=30, callback=lambda: set_mode("join"))
     ]
     
-    menu_running = True
-    while menu_running:
+    def set_mode(selection):
+        nonlocal mode_selection
+        mode_selection = selection
+
+    clock = pygame.time.Clock()
+    while mode_selection is None:
         screen.fill(CREAM)
         if cookie_img is not None:
             for pos in cookie_positions:
@@ -108,49 +66,35 @@ def main_menu():
         for button in buttons:
             button.draw(screen)
         pygame.display.flip()
-        if mode_selection is not None:
-            menu_running = False
-
-def set_mode(selection):
-    global mode_selection
-    mode_selection = selection
-
-# --- IP and Port Validation Functions ---
-def is_valid_ip(ip):
-    try:
-        ipaddress.ip_address(ip)
-        return True
-    except ValueError:
-        return False
-
-def is_valid_port(port):
-    try:
-        port = int(port)
-        return 1 <= port <= 65535
-    except ValueError:
-        return False
+        clock.tick(60)
+    
+    # If the user chose to join, prompt for IP/port:
+    if mode_selection == "join":
+        result = ip_input_screen()
+        if result is None:
+            # If user cancels, restart menu
+            return run_main_menu()
+        else:
+            server_ip, server_port = result
+    else:
+        # For "start", assume hosting on localhost
+        server_ip, server_port = "127.0.0.1", 55555
+    return mode_selection, server_ip, server_port
 
 # --- IP Input Screen (for joining a game) ---
 def ip_input_screen():
     clock = pygame.time.Clock()
-    blink = True
-    blink_timer = 0
-    error_message = None  # For error messages
-
-    # Create text boxes for IP and Port
+    error_message = None
     ip_box = TextBox(rect=(WIDTH // 2 - 150, 160, 300, 40), text="Enter IP", 
                      font_size=30, bg_color=WHITE, text_color=BLACK, 
                      border_color=BROWN, border_width=2)
     port_box = TextBox(rect=(WIDTH // 2 - 150, 220, 300, 40), text="Enter Port", 
                        font_size=30, bg_color=WHITE, text_color=BLACK, 
                        border_color=BROWN, border_width=2)
-    
-    # Buttons for navigation
     back_button = Button(rect=(20, HEIGHT - 70, 150, 50), text="Go Back", bg_color=BROWN, 
                          text_color=WHITE, font_size=24, callback=None)
-    join_button = Button(rect=(WIDTH / 2 + 130, HEIGHT - 70, 150, 50), text="Join Game", bg_color=BROWN, 
+    join_button = Button(rect=(WIDTH - 170, HEIGHT - 70, 150, 50), text="Join Game", bg_color=BROWN, 
                          text_color=WHITE, font_size=24, callback=None)
-    
     ip_box.set_active(True)
     active_box = ip_box
 
@@ -161,31 +105,27 @@ def ip_input_screen():
         if not ip_text or not port_text:
             error_message = "IP and Port cannot be empty."
             return None
-        if not is_valid_ip(ip_text):
-            error_message = "Invalid IP address."
-            return None
-        if not port_text.isdigit() or not is_valid_port(port_text):
+        # Simple IP/port validation (expand as needed)
+        try:
+            port = int(port_text)
+            if port < 1 or port > 65535:
+                error_message = "Port must be between 1 and 65535."
+                return None
+        except ValueError:
             error_message = "Invalid port number."
             return None
-        # Use the handshake to check for server availability and join permission.
-        success, err = is_server_listening(ip_text, int(port_text))
-        if not success:
-            error_message = err
-            return None
-        return ip_text, int(port_text)
+        return ip_text, port
 
-    running = True
-    while running:
+    while True:
         screen.fill(CREAM)
         if cookie_img is not None:
             for pos in cookie_positions:
                 screen.blit(cookie_img, pos)
-        
         title = button_font.render("Join Game", True, BROWN)
         screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 40))
-        label = pygame.font.SysFont("Arial", 20).render(
+        info = pygame.font.SysFont("Arial", 20).render(
             "Click boxes or press [Tab] to switch, [Enter] to confirm", True, BROWN)
-        screen.blit(label, (WIDTH // 2 - label.get_width() // 2, 90))
+        screen.blit(info, (WIDTH // 2 - info.get_width() // 2, 90))
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -201,7 +141,7 @@ def ip_input_screen():
                     ip_box.set_active(False)
                     active_box = port_box
                 elif back_button.rect.collidepoint(event.pos):
-                    return None  # Go back to main menu
+                    return None  # Cancel join; return to menu
                 elif join_button.rect.collidepoint(event.pos):
                     result = attempt_join()
                     if result:
@@ -225,45 +165,50 @@ def ip_input_screen():
                 else:
                     active_box.add_char(event.unicode)
         
-        blink_timer += clock.get_time()
-        if blink_timer > 500:
-            blink = not blink
-            blink_timer = 0
-
-        ip_box.draw(screen, blink)
-        port_box.draw(screen, blink)
+        ip_box.draw(screen, True)
+        port_box.draw(screen, True)
         back_button.draw(screen)
         join_button.draw(screen)
         
         if error_message:
-            error_surface = pygame.font.SysFont("Arial", 20).render(error_message, True, (255, 0, 0))
-            screen.blit(error_surface, (WIDTH // 2 - error_surface.get_width() // 2, 300))
+            err_surface = pygame.font.SysFont("Arial", 20).render(error_message, True, (255, 0, 0))
+            screen.blit(err_surface, (WIDTH // 2 - err_surface.get_width() // 2, 300))
         
         pygame.display.flip()
         clock.tick(60)
 
-# --- Main Program Loop ---
-while True:
-    main_menu()
-    if mode_selection == "start":
-        print("Starting as server + client")
-        server_thread = threading.Thread(target=server_main.main, daemon=True)
-        server_thread.start()
-        client_main.main()
-        break
-    elif mode_selection == "join":
-        print("Joining as client only")
-        result = ip_input_screen()
-        if result is None:
-            mode_selection = None
-            continue
-        else:
-            ip, port = result
-            print(f"Connecting to {ip}:{port}")
-            client_main.SERVER_IP = ip
-            client_main.SERVER_PORT = port
-            client_main.main()
-            break
+# --- Game Loop Wrapper ---
+def run_game(server_ip, server_port):
+    pygame.display.set_mode((WIDTH,HEIGHT))
+    back_to_menu = client_main(server_ip, server_port)
+    return back_to_menu
 
-pygame.quit()
-sys.exit()
+# --- Centralized Main Loop ---
+def main():
+    while True:
+        # Show the main menu and get a game mode and connection info.
+        result = run_main_menu()
+        if not result:
+            break  # exit if menu cancelled
+        mode, server_ip, server_port = result
+
+        # If hosting, start the server thread
+        if mode == "start":
+            print("Starting as server + client")
+            server_thread = threading.Thread(target=server_main.main, daemon=True)
+            server_thread.start()
+        else:
+            print("Joining as client only")
+        
+        # Run the game loop.
+        # client_main should include a mechanism (e.g., a "Back to Menu" button)
+        # that, when activated, breaks out of its loop and returns True.
+        back_to_menu = run_game(server_ip, server_port)
+        if not back_to_menu:
+            break  # if the game signals to exit completely, break out
+        # Otherwise, loop back to show the main menu again.
+
+if __name__ == "__main__":
+    main()
+    pygame.quit()
+    sys.exit()
