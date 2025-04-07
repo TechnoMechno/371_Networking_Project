@@ -90,10 +90,13 @@ class GameStateManager:
                     dragged = int(dragged)
                     cookie = self.cookies.get(dragged)
                     if cookie:
-                        if cookie.is_clicked(self.players[player_id].mouse_pos):
-                            if cookie.locked_by is None or cookie.locked_by == player_id:
-                                cookie.locked_by = player_id
-                                cookie.update_position(self.players[player_id].mouse_pos)
+                        if cookie.on_plate is None:
+                            if cookie.is_clicked(self.players[player_id].mouse_pos):
+                                if cookie.locked_by is None or cookie.locked_by == player_id:
+                                    cookie.locked_by = player_id
+                                    cookie.update_position(self.players[player_id].mouse_pos)
+                        else:
+                            pass
             elif data_obj.get("type") == "start_game":
                 player_id = self.client_addresses[addr]
                 self.start_game_flag = True
