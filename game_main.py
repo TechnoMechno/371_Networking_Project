@@ -277,6 +277,11 @@ def run_game(screen, server_ip, server_port):
     running = True
     while running:
         current_mouse_pos = list(pygame.mouse.get_pos())
+
+        if hasattr(game_manager, 'server_shutdown') and game_manager.server_shutdown:
+            print("Server has shut down, returning to menu")
+            running = False
+            return True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -285,8 +290,12 @@ def run_game(screen, server_ip, server_port):
                 if game_manager.assigned_player_id == 1:
                     networking.send_message({"type": "shutdown"})
                     print("Sent shutdown signal to server")
-                time.sleep(0.5)  # Give time to send before disconnect
-                running = False
+                    time.sleep(0.5)  # Give time to send before disconnect
+                    running = False  # Only need to change running to false if server shuts down.
+                else: # If the client is not also the server, then remove it from client addresses and stop rendering it's plate.
+                    return "Menu"
+                    continue
+
                 return True
 
             if game_manager.game_state == GameState.LOBBY.value:
