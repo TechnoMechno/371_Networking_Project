@@ -284,6 +284,8 @@ def run_game(screen, server_ip, server_port):
             return True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print("QUIT event detected; sending quit message")
+                networking.send_message({"type": "quit"})
                 running = False
                 return False
             if back_button.handle_event(event):
@@ -293,8 +295,9 @@ def run_game(screen, server_ip, server_port):
                     time.sleep(0.5)  # Give time to send before disconnect
                     running = False  # Only need to change running to false if server shuts down.
                 else: # If the client is not also the server, then remove it from client addresses and stop rendering it's plate.
+                    print("QUIT event detected; sending quit message")
+                    networking.send_message({"type": "quit"})
                     return "Menu"
-                    continue
 
                 return True
 

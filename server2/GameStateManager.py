@@ -19,7 +19,7 @@ class GameStateManager:
         self.game_state = GameState.LOBBY
         
         self.next_player_id = 1     # Incrementing player id
-        self.lock = threading.Lock()  # For thread safety
+        self.lock = threading.RLock()  # For thread safety
         
         # Create the central plate (centered on the screen).
         central_position = [SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2]
@@ -108,6 +108,10 @@ class GameStateManager:
                     print("Received reset_game command.")
                 else:
                     print(f"Player {player_id} attempted to reset the game but is not authorized.")
+            elif data_obj.get("type") == "quit":
+                print("a player quit!")
+                self.handle_player_disconnect(addr)
+                return
                                 
     def update_dragged_cookies(self):
         with self.lock:
@@ -185,6 +189,23 @@ class GameStateManager:
         self.reset_game_flag = False
         print("Transition: GAME_OVER -> LOBBY")
 
+    def handle_player_disconnect(self, addr):
+        print("enter handle")
+        with self.lock:
+            print("with self lock")
+            if addr in self.client_addresses:
+                print("addr in client_addresses")
+                player_id = self.client_addresses.pop(addr)
+                if player_id in self.players:
+                    del self.players[player_id]
+                print(f"Player {player_id} disconnected.")
+                
+                # Recalculate next_player_id to be the smallest missing number in [1, 4].
+                used_ids = set(self.players.keys())
+                for i in range(1,5):
+                    if i not  in used_ids:
+                        self.next_player_id = i
+                        break
     @staticmethod
     def calculate_plate_position(player_index, screen_width, screen_height, margin=30, plate_radius=150):
         x = margin + plate_radius if player_index % 2 == 1 else screen_width - margin - plate_radius

@@ -269,9 +269,12 @@ def run_game(screen, server_ip, server_port):
         current_mouse_pos = list(pygame.mouse.get_pos())
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print("QUIT event detected; sending quit message")
+                networking.send_message({"type": "quit"})
                 running = False
                 return False
             if back_button.handle_event(event):
+                networking.send_message({"type": "quit"})
                 running = False
                 return True
 
