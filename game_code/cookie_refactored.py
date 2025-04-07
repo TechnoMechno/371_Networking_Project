@@ -12,7 +12,7 @@ class Cookie:
         self.offset = [0, 0]
         self.on_plate = None
         self.original_position = list(position)
-        self.radius = 30
+        self.radius = COOKIE_SIZE / 2 - 5
 
     def is_clicked(self, mouse_pos):
         dx = mouse_pos[0] - self.position[0]

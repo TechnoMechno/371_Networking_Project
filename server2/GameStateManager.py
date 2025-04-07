@@ -82,7 +82,10 @@ class GameStateManager:
                         if cookie.locked_by == player_id:
                             snapped = cookie.snap_to_player_plate(self.players[player_id])
                             if snapped:
-                                self.players[player_id].score += 1
+                                if cookie.type == 'star':
+                                    self.players[player_id].score += 2
+                                else:
+                                    self.players[player_id].score += 1
                             else:
                                 cookie.update_position(cookie.original_position)
                             cookie.locked_by = None
