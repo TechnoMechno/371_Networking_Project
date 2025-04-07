@@ -53,7 +53,7 @@ def is_server_listening(ip_address, port):
 ##############################################
 # MAIN MENU (IN CLIENT)
 ##############################################
-def run_main_menu(screen):
+def run_main_menu(screen, default_host=False):
     mode_selection = None
 
     # Create two buttons for starting or joining a game.
@@ -110,7 +110,7 @@ def run_main_menu(screen):
     
     # If the user chose to join, prompt for IP/port.
     if mode_selection == "join":
-        result = ip_input_screen(screen)
+        result = ip_input_screen(screen, auto_start=not default_host)
         if result is None:
             return run_main_menu(screen)  # Restart menu if join cancelled.
         else:
@@ -118,11 +118,12 @@ def run_main_menu(screen):
     else:
         # For "start", assume hosting on localhost.
         server_ip, server_port = "127.0.0.1", 55555
-    return mode_selection, server_ip, server_port
+    return mode_selection, server_ip, server_port, mode_selection == "start"
+
 
 
 # input screen to join
-def ip_input_screen(screen):
+def ip_input_screen(screen, auto_start=True):
     clock = pygame.time.Clock()
     error_message = None
     ip_box = TextBox(rect=(MENU_WIDTH // 2 - 150, 160, 300, 40), text="Enter IP",
@@ -159,7 +160,7 @@ def ip_input_screen(screen):
         success, err = is_server_listening(ip_text, port)
         if not success:
             # If no server is found and we're on localhost, launch the server.
-            if ip_text == "127.0.0.1" and "No server running" in err:
+            if auto_start and ip_text == "127.0.0.1" and "No server running" in err:
                 print("No server detected; launching server thread.")
                 import threading, time
                 server_thread = threading.Thread(target=lambda: __import__("server2.server_main").main(), daemon=True)
@@ -279,8 +280,13 @@ def run_game(screen, server_ip, server_port):
                 running = False
                 return False
             if back_button.handle_event(event):
+                if game_manager.assigned_player_id == 1:
+                    networking.send_message({"type": "shutdown"})
+                    print("Sent shutdown signal to server")
+                time.sleep(0.5)  # Give time to send before disconnect
                 running = False
                 return True
+
             if game_manager.game_state == GameState.LOBBY.value:
                 if game_manager.assigned_player_id == 1:
                     if start_button.handle_event(event):
@@ -332,8 +338,9 @@ def main():
     while True:
         menu_result = run_main_menu(screen)
         if not menu_result:
+            print("Exiting game from menu.")
             break
-        mode, server_ip, server_port = menu_result
+        mode, server_ip, server_port, user_is_host = menu_result
         
         # If "Start Game" is selected, immediately launch the server.
         if mode == "start":
@@ -343,13 +350,25 @@ def main():
                 daemon=True
             )
             server_thread.start()
-            time.sleep(1)  # Wait briefly to ensure the server is up and running
+            for i in range(10):
+                ready, _ = is_server_listening(server_ip, server_port)
+                if ready:
+                    print("✅ Server is ready!")
+                    break
+                else:
+                    print(f"Waiting for server... ({i+1}/10)")
+                time.sleep(0.5)
+            else:
+                print("Server failed to start in time.")
+                continue  # Skip starting the client game loop
             
         # Run the client game loop.
         back_to_menu = run_game(screen, server_ip, server_port)
         if not back_to_menu:
+            print("Exiting game loop to quit completely.")
             break
         # After game, reset window to menu size.
+        print("Returned to menu from game.")
         screen = pygame.display.set_mode((MENU_WIDTH, MENU_HEIGHT))
     pygame.quit()
     sys.exit()
