@@ -9,4 +9,5 @@ karen_test.py
 
 # Ignoring Python bytecode files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
