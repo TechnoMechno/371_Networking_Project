@@ -15,7 +15,6 @@ from client2.Button import Button
 from client2.TextBox import TextBox
 from server2 import server_main
 
-
 # Define dimensions for menu and game screens.
 MENU_WIDTH, MENU_HEIGHT = 600, 400
 GAME_WIDTH, GAME_HEIGHT = SCREEN_WIDTH, SCREEN_HEIGHT
@@ -190,6 +189,7 @@ def ip_input_screen(screen, auto_start=True):
         return ip_text, port
 
 
+    pygame.font.init()
     font = pygame.font.SysFont("Arial", 20)
     while True:
         screen.fill(CREAM)
@@ -266,8 +266,19 @@ def run_game(screen, server_ip, server_port):
     start_button = Button((GAME_WIDTH//2 - 100, GAME_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
     reset_button = Button((GAME_WIDTH//2 - 63, GAME_HEIGHT//1.65 - 25, 120, 35), "Reset", (128, 0, 0))
     back_button = Button((GAME_WIDTH//2 - 90, GAME_HEIGHT - 50, 180, 40), "Back To Menu", (200, 0, 0))
-    ip_box_text = TextBox((SCREEN_WIDTH//2 - 192, SCREEN_HEIGHT//2 - 375, 385, 40), "IP Server: " + str(server_ip))
-    port_box_text = TextBox((SCREEN_WIDTH//2 - 150, SCREEN_HEIGHT//2 - 325, 300, 40), "Port: " + str(server_port))
+
+    pygame.font.init()
+    font = pygame.font.SysFont("Arial", 20)
+
+    # Define rectangles for IP and Port display
+    ip_rect = pygame.Rect(SCREEN_WIDTH//2 - 192, SCREEN_HEIGHT//2 - 375, 385, 40)
+    port_rect = pygame.Rect(SCREEN_WIDTH//2 - 150, SCREEN_HEIGHT//2 - 325, 300, 40)
+
+    # Render centered text
+    ip_text = font.render("IP Server: " + str(server_ip), True, (0, 0, 0))
+    port_text = font.render("Port: " + str(server_port), True, (0, 0, 0))
+    ip_text_rect = ip_text.get_rect(center=ip_rect.center)
+    port_text_rect = port_text.get_rect(center=port_rect.center)
     
     # Helper functions used within the game loop.
     def find_top_cookie(mouse_pos, cookies):
@@ -348,8 +359,12 @@ def run_game(screen, server_ip, server_port):
         if game_manager.game_state == GameState.LOBBY.value:
             if game_manager.assigned_player_id == 1:
                 start_button.draw(screen)
-                ip_box_text.draw(screen)
-                port_box_text.draw(screen)
+                pygame.draw.rect(screen, WHITE, ip_rect)
+                pygame.draw.rect(screen, WHITE, port_rect)
+                pygame.draw.rect(screen, BLACK, ip_rect, 2)
+                pygame.draw.rect(screen, BLACK, port_rect, 2)
+                screen.blit(ip_text, ip_text_rect)
+                screen.blit(port_text, port_text_rect)
             else:
                 #ip_box_text.draw(screen)
                 #port_box_text.draw(screen)
