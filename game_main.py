@@ -120,8 +120,8 @@ def run_main_menu(screen, default_host=False):
         server_ip, server_port = get_local_ip(), 55555
     return mode_selection, server_ip, server_port, mode_selection == "start"
 
+# Gets the ip address of the current machine for other devices to connect to.
 def get_local_ip():
-    """Get the local IP address of this machine that other devices can connect to"""
     try:
         # Create a socket that connects to an external server
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
