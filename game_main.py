@@ -368,7 +368,8 @@ def run_game(screen, server_ip, server_port):
             else:
                 #ip_box_text.draw(screen)
                 #port_box_text.draw(screen)
-                draw_status_text(screen, "waiting for players")
+                waiting_for_players_text.draw(screen)
+                #draw_status_text(screen, "waiting for players")
         elif game_manager.game_state == GameState.GAME_OVER.value:
             if game_manager.assigned_player_id == 1:
                 reset_button.draw(screen)
