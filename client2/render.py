@@ -35,52 +35,15 @@ def draw_scoreboard(screen, scoreboard):
       - "position": a dict with 'x' and 'y' for where to draw the text.
     """
     # Initialize a font object
-    font = pygame.font.SysFont(None, 36)
-    for key, data in scoreboard.items():
-        # Construct the score text
-        text = f"{data['player']}, Score: {data['score']}"
-        # Use the provided coordinates from scoreboard data
-        pos = data['position']
-        text_surface = font.render(text, True, BROWN)
-        screen.blit(text_surface, (pos["x"], pos["y"]))
+    # font = pygame.font.SysFont(None, 36)
+    # for key, data in scoreboard.items():
+    #     # Construct the score text
+    #     text = f"{data['player']}, Score: {data['score']}"
+    #     # Use the provided coordinates from scoreboard data
+    #     pos = data['position']
+    #     text_surface = font.render(text, True, BROWN)
+    #     screen.blit(text_surface, (pos["x"], pos["y"]))
 
-def draw_end_scoreboard(self):
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 128))
-        self.screen.blit(overlay, (0, 0))
-        
-        scoreboard_width = 400
-        scoreboard_height = 300
-        scoreboard_x = (SCREEN_WIDTH - scoreboard_width) // 2
-        scoreboard_y = (SCREEN_HEIGHT - scoreboard_height) // 2
-        
-        pygame.draw.rect(self.screen, (255, 255, 255), 
-                         (scoreboard_x, scoreboard_y, scoreboard_width, scoreboard_height))
-        pygame.draw.rect(self.screen, (0, 0, 0), 
-                         (scoreboard_x, scoreboard_y, scoreboard_width, scoreboard_height), 2)
-        
-        font_title = pygame.font.SysFont('Arial', 28, bold=True)
-        title = font_title.render("Game Over", True, (0, 0, 0))
-        self.screen.blit(title, (scoreboard_x + (scoreboard_width - title.get_width()) // 2, 
-                                  scoreboard_y + 20))
-        
-        sorted_players = sorted(self.players, key=lambda player: player.score, reverse=True)
-        winner = sorted_players[0]
-        
-        font_winner = pygame.font.SysFont('Arial', 24)
-        winner_text = font_winner.render(f"Winner: {winner.name}", True, (0, 0, 0))
-        self.screen.blit(winner_text, (scoreboard_x + (scoreboard_width - winner_text.get_width()) // 2, 
-                                        scoreboard_y + 60))
-        
-        font_scores = pygame.font.SysFont('Arial', 20)
-        for i, player in enumerate(sorted_players):
-            text = font_scores.render(f"{player.name}: {player.score} points", True, (0, 0, 0))
-            self.screen.blit(text, (scoreboard_x + 50, scoreboard_y + 100 + i * 30))
-        
-        font_restart = pygame.font.SysFont('Arial', 16)
-        restart_text = font_restart.render("Click Restart to play again", True, (0, 0, 0))
-        self.screen.blit(restart_text, (scoreboard_x + (scoreboard_width - restart_text.get_width()) // 2, 
-                                        scoreboard_y + scoreboard_height - 40))
 
 def render(screen, game_state, assets, assigned_player_id, reset_button):
     """
