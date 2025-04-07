@@ -264,7 +264,6 @@ def run_game(screen, server_ip, server_port):
     # UI elements for game actions and to return to menu.
     start_button = Button((GAME_WIDTH//2 - 100, GAME_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
     reset_button = Button((GAME_WIDTH//2 - 63, GAME_HEIGHT//1.65 - 25, 120, 35), "Reset", (128, 0, 0))
-<<<<<<< HEAD
     back_button = Button((GAME_WIDTH//2 - 90, GAME_HEIGHT - 50, 180, 40), "Back To Menu", (200, 0, 0))
 
     pygame.font.init()
@@ -279,18 +278,6 @@ def run_game(screen, server_ip, server_port):
     port_text = font.render("Port: " + str(server_port), True, (0, 0, 0))
     ip_text_rect = ip_text.get_rect(center=ip_rect.center)
     port_text_rect = port_text.get_rect(center=port_rect.center)
-=======
-    back_button = Button((400, 10, 140, 40), "Back To Menu", (200, 0, 0))
-    ip_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 385, 40), "Open IP Server (Connect): " + str(server_ip))
-    port_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 385, 40), "Open Port: " + str(server_port))
-    waiting_for_players_text = TextBox((GAME_WIDTH//2 - 210, GAME_HEIGHT//2 + 290, 200, 50), "Waiting For Players...", 
-                                  font_size=56,
-                                  text_color=(255,0,0),
-                                  bg_color=(255, 245, 211),
-                                  placeholder_color=(100, 100, 100), 
-                                  border_color=(255, 245, 211), 
-                                  border_width=0)
->>>>>>> main
     
     # Helper functions used within the game loop.
     def find_top_cookie(mouse_pos, cookies):
@@ -380,7 +367,6 @@ def run_game(screen, server_ip, server_port):
         if game_manager.game_state == GameState.LOBBY.value:
             if game_manager.assigned_player_id == 1:
                 start_button.draw(screen)
-<<<<<<< HEAD
                 pygame.draw.rect(screen, WHITE, ip_rect)
                 pygame.draw.rect(screen, WHITE, port_rect)
                 pygame.draw.rect(screen, BLACK, ip_rect, 2)
@@ -389,16 +375,6 @@ def run_game(screen, server_ip, server_port):
                 screen.blit(port_text, port_text_rect)
             else:
                 draw_status_text(screen, "waiting for players")
-=======
-                ip_box_text.draw(screen)
-                port_box_text.draw(screen)
-                waiting_for_players_text.draw(screen)
-            else:
-                #ip_box_text.draw(screen)
-                #port_box_text.draw(screen)
-                waiting_for_players_text.draw(screen)
-                #draw_status_text(screen, "waiting for players")
->>>>>>> main
         elif game_manager.game_state == GameState.GAME_OVER.value:
             if game_manager.assigned_player_id == 1:
                 reset_button.draw(screen)
