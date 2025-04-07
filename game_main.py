@@ -253,8 +253,8 @@ def run_game(screen, server_ip, server_port):
     start_button = Button((GAME_WIDTH//2 - 100, GAME_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
     reset_button = Button((GAME_WIDTH//2 - 63, GAME_HEIGHT//1.65 - 25, 120, 35), "Reset", (128, 0, 0))
     back_button = Button((400, 10, 140, 40), "Back To Menu", (200, 0, 0))
-    ip_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 275, 40), "Open IP Server: 127.0.0.1")
-    port_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 275, 40), "Open Port: 55555" )
+    ip_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 350, 40), "Open IP Server (Connect): " + str(server_ip))
+    port_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 350, 40), "Open Port: " + str(server_port))
     
     # Helper functions used within the game loop.
     def find_top_cookie(mouse_pos, cookies):
