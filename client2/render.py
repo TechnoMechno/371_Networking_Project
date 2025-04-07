@@ -45,37 +45,40 @@ def draw_scoreboard(screen, scoreboard):
     
     # Iterate over scoreboard items sorted by their key.
     # This example assumes a maximum of 4 players.
-    for i, (pid, data) in enumerate(sorted(scoreboard.items(), key=lambda item: item[0])):
-        if i < 4:
-            # Pick the corner for this player.
-            pos = corners[i]
-            text = f"{data['player']}: {data['score']}"
-            text_surface = font.render(text, True, BLACK)
-            text_rect = text_surface.get_rect()
+    for pid, data in scoreboard.items():
+        # Determine corner position based on player ID (modulo 4)
+        
+        pid_int = int(pid) if isinstance(pid, str) else pid
+        corner_index = pid_int-1
+        pos = corners[corner_index]
+        
+        text = f"{data['player']}: {data['score']}"
+        text_surface = font.render(text, True, BLACK)
+        text_rect = text_surface.get_rect()
+        
+        # Align text based on the corner:
+        if corner_index == 0:  # Top-left
+            text_rect.topleft = pos
+        elif corner_index == 1:  # Top-right
+            text_rect.topright = pos
+        elif corner_index == 2:  # Bottom-left
+            text_rect.bottomleft = pos
+        elif corner_index == 3:  # Bottom-right
+            text_rect.bottomright = pos
             
-            # Align text based on the corner:
-            if i == 0:       # Top-left
-                text_rect.topleft = pos
-            elif i == 1:     # Top-right
-                text_rect.topright = pos
-            elif i == 2:     # Bottom-left
-                text_rect.bottomleft = pos
-            elif i == 3:     # Bottom-right
-                text_rect.bottomright = pos
+        # Create a background rectangle behind the text with some padding.
+        padding = 8
+        bg_rect = pygame.Rect(
+            text_rect.left - padding, 
+            text_rect.top - padding, 
+            text_rect.width + 2 * padding, 
+            text_rect.height + 2 * padding
+        )
+        pygame.draw.rect(screen, CREAM, bg_rect)
+        pygame.draw.rect(screen, BROWN, bg_rect, 2)
             
-            # Create a background rectangle behind the text with some padding.
-            padding = 8
-            bg_rect = pygame.Rect(
-                text_rect.left - padding, 
-                text_rect.top - padding, 
-                text_rect.width + 2 * padding, 
-                text_rect.height + 2 * padding
-            )
-            pygame.draw.rect(screen, CREAM, bg_rect)
-            pygame.draw.rect(screen, BROWN, bg_rect, 2)
-            
-            # Finally, draw the text over the background.
-            screen.blit(text_surface, text_rect)
+        # Finally, draw the text over the background.
+        screen.blit(text_surface, text_rect)
 
 
 def draw_end_scoreboard(self):
