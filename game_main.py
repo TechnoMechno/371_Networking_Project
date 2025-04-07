@@ -284,10 +284,17 @@ def run_game(screen, server_ip, server_port):
             return True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("QUIT event detected; sending quit message")
-                networking.send_message({"type": "quit"})
-                running = False
-                return False
+                if game_manager.assigned_player_id == 1:
+                    networking.send_message({"type": "shutdown"})
+                    print("Sent shutdown signal to server")
+                    time.sleep(0.5)  # Give time to send before disconnect
+                    running = False  # Only need to change running to false if server shuts down.
+                    return False
+                else:
+                    print("QUIT event detected; sending quit message")
+                    networking.send_message({"type": "quit"})
+                    running = False
+                    return False
             if back_button.handle_event(event):
                 if game_manager.assigned_player_id == 1:
                     networking.send_message({"type": "shutdown"})
