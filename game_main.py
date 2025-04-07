@@ -367,19 +367,19 @@ def run_game(screen, server_ip, server_port):
         if game_manager.game_state == GameState.LOBBY.value:
             if game_manager.assigned_player_id == 1:
                 start_button.draw(screen)
-<<<<<<< HEAD
-                ip_box_text.draw(screen)
-                port_box_text.draw(screen)
-                waiting_for_players_text.draw(screen)
-=======
                 pygame.draw.rect(screen, WHITE, ip_rect)
                 pygame.draw.rect(screen, WHITE, port_rect)
                 pygame.draw.rect(screen, BLACK, ip_rect, 2)
                 pygame.draw.rect(screen, BLACK, port_rect, 2)
                 screen.blit(ip_text, ip_text_rect)
                 screen.blit(port_text, port_text_rect)
->>>>>>> 22252b9f858509a82d3c25448a88fd694e7fdafe
             else:
+                pygame.draw.rect(screen, WHITE, ip_rect)
+                pygame.draw.rect(screen, WHITE, port_rect)
+                pygame.draw.rect(screen, BLACK, ip_rect, 2)
+                pygame.draw.rect(screen, BLACK, port_rect, 2)
+                screen.blit(ip_text, ip_text_rect)
+                screen.blit(port_text, port_text_rect)
                 draw_status_text(screen, "waiting for players")
         elif game_manager.game_state == GameState.GAME_OVER.value:
             if game_manager.assigned_player_id == 1:

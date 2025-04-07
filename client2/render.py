@@ -32,17 +32,6 @@ def draw_scoreboard(screen, scoreboard):
     Each player is assigned to one of the four corners:
       - Top-left, Top-right, Bottom-left, Bottom-right.
     """
-<<<<<<< HEAD
-    # Initialize a font object
-    # font = pygame.font.SysFont(None, 36)
-    # for key, data in scoreboard.items():
-    #     # Construct the score text
-    #     text = f"{data['player']}, Score: {data['score']}"
-    #     # Use the provided coordinates from scoreboard data
-    #     pos = data['position']
-    #     text_surface = font.render(text, True, BROWN)
-    #     screen.blit(text_surface, (pos["x"], pos["y"]))
-=======
     # Define corner positions with a little margin from the edges.
     corners = [
         (20, 20),  # top-left
@@ -91,7 +80,6 @@ def draw_scoreboard(screen, scoreboard):
         # Finally, draw the text over the background.
         screen.blit(text_surface, text_rect)
 
->>>>>>> temp-branch
 
 
 def render(screen, game_state, assets, assigned_player_id, reset_button):
