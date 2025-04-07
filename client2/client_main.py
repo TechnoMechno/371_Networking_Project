@@ -1,64 +1,237 @@
 import pygame
-import time
-import json
 import sys
-import os
-from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND_COLOR, COOKIE_SIZE, REGULAR_COOKIE_IMAGE, STAR_COOKIE_IMAGE, PLATE_IMAGE, GameState
-from .client_networking import ClientNetworking
-from .client_gameManager import ClientGameManager
-from .render import load_assets, render
-from .Button import Button
-from .TextBox import TextBox
+import socket
+import json
+import threading
+import ipaddress
+import time
 
-#SERVER_IP = "142.58.214.104"
-SERVER_IP = "127.0.0.1"
-SERVER_PORT = 55555
+# Import configuration and supporting modules.
+from game_code.config import SCREEN_WIDTH, SCREEN_HEIGHT, CREAM, BROWN, WHITE, BLACK, GameState
+from game_code.render import load_assets, render
+from client_networking import ClientNetworking
+from client_gameManager import ClientGameManager
+from Button import Button
+from TextBox import TextBox
 
-def find_top_cookie(mouse_pos, cookies):
+# Define dimensions for menu and game screens.
+MENU_WIDTH, MENU_HEIGHT = 600, 400
+GAME_WIDTH, GAME_HEIGHT = SCREEN_WIDTH, SCREEN_HEIGHT
+
+##############################################
+# HANDSHAKE FUNCTION (PING / PONG)
+##############################################
+def is_server_listening(ip_address, port):
     """
-    Given the current mouse position and the cookies dictionary (from server state),
-    returns the ID of the topmost cookie under the cursor.
-    Assumes cookies with higher numeric IDs (converted from keys) are drawn on top.
+    Send a UDP 'JOIN_CHECK' message to the server and expect:
+      - "PONG" as a plain text response if join is allowed, or
+      - A JSON message with type "game_in_session" if the game is busy.
     """
-    # Convert keys to integers, sort in descending order.
-    for cid in sorted([int(k) for k in cookies.keys()], reverse=True):
-        cookie = cookies[str(cid)]  # assuming keys in the dict are strings
-        pos = cookie.get("position", [0, 0])
-        radius = cookie.get("radius", 30)
-        dx = mouse_pos[0] - pos[0]
-        dy = mouse_pos[1] - pos[1]
-        if (dx * dx + dy * dy) ** 0.5 < radius:
-            return str(cid)
-    return None
+    test_message = "JOIN_CHECK"
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(1)  # 1-second timeout for response
+    try:
+        sock.sendto(test_message.encode(), (ip_address, port))
+        data, addr = sock.recvfrom(1024)
+        response_str = data.decode().strip()
+        try:
+            response_obj = json.loads(response_str)
+            if response_obj.get("type") == "game_in_session":
+                return False, response_obj.get("message", "Game is already in session. Cannot join.")
+        except json.JSONDecodeError:
+            if response_str == "PONG":
+                return True, None
+            else:
+                return False, "Unexpected handshake response: " + response_str
+    except socket.timeout:
+        return False, f"No server running on IP: {ip_address} and port: {port}"
+    except Exception as e:
+        return False, "Handshake error: " + str(e)
+    finally:
+        sock.close()
 
-def draw_status_text(screen, status_message):
-    """
-    Renders a status message in brown at the center of the screen.
-    """
-    font = pygame.font.SysFont(None, 48)
-    BROWN = (165, 42, 42)  # Brown color
-    text_surface = font.render(status_message, True, BROWN)
-    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
-    screen.blit(text_surface, text_rect)
+##############################################
+# MAIN MENU (IN CLIENT)
+##############################################
+def run_main_menu(screen):
+    mode_selection = None
 
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Cookie Dragging Game Client")
-    clock = pygame.time.Clock()
-
-    # Load image assets AFTER display is initialized
-    assets = load_assets()  # load_assets() taken from 'render.py'
-
-    # Initialize game state
-    game_manager = ClientGameManager()
+    # Create two buttons for starting or joining a game.
+    start_button = Button(rect=(200, 200, 200, 60), text="Start a Game", bg_color=BROWN,
+                          text_color=WHITE, font_size=30, callback=lambda: set_mode("start"))
+    join_button = Button(rect=(200, 280, 200, 60), text="Join a Game", bg_color=BROWN,
+                         text_color=WHITE, font_size=30, callback=lambda: set_mode("join"))
+    buttons = [start_button, join_button]
     
-    # Initialize networking and start receiving messages
-    networking = ClientNetworking(SERVER_IP, SERVER_PORT)
+    title_font = pygame.font.SysFont("comicsansms", 64)
+    
+    # Attempt to load a background cookie image.
+    try:
+        cookie_img = pygame.image.load("Assets/cookie.png").convert_alpha()
+        cookie_img = pygame.transform.scale(cookie_img, (64, 64))
+    except pygame.error:
+        cookie_img = None
+    cookie_positions = []
+    if cookie_img:
+        cookie_positions = [
+            (30, 30),
+            (MENU_WIDTH - 50 - 64, 30),
+            (30, MENU_HEIGHT - 30 - 64),
+            (MENU_WIDTH - 30 - 64, MENU_HEIGHT - 30 - 64),
+            (MENU_WIDTH // 2 - 32, MENU_HEIGHT // 2 - 50),
+            (10, MENU_HEIGHT // 2 - 40),
+            (MENU_WIDTH - 150, MENU_HEIGHT // 2 - 24)
+        ]
+    
+    def set_mode(selection):
+        nonlocal mode_selection
+        mode_selection = selection
+
+    clock = pygame.time.Clock()
+    while mode_selection is None:
+        screen.fill(CREAM)
+        if cookie_img:
+            for pos in cookie_positions:
+                screen.blit(cookie_img, pos)
+        title_surface = title_font.render("COOKIE GRABBER", True, BROWN)
+        title_rect = title_surface.get_rect(center=(MENU_WIDTH // 2, 100))
+        screen.blit(title_surface, title_rect)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            for btn in buttons:
+                btn.handle_event(event)
+        for btn in buttons:
+            btn.draw(screen)
+        pygame.display.flip()
+        clock.tick(60)
+    
+    # If the user chose to join, prompt for IP/port.
+    if mode_selection == "join":
+        result = ip_input_screen(screen)
+        if result is None:
+            return run_main_menu(screen)  # Restart menu if join cancelled.
+        else:
+            server_ip, server_port = result
+    else:
+        # For "start", assume hosting on localhost.
+        server_ip, server_port = "127.0.0.1", 55555
+    return mode_selection, server_ip, server_port
+
+##############################################
+# IP INPUT SCREEN (for JOIN mode)
+##############################################
+def ip_input_screen(screen):
+    clock = pygame.time.Clock()
+    error_message = None
+    ip_box = TextBox(rect=(MENU_WIDTH // 2 - 150, 160, 300, 40), text="Enter IP",
+                     font_size=30, bg_color=WHITE, text_color=BLACK,
+                     border_color=BROWN, border_width=2)
+    port_box = TextBox(rect=(MENU_WIDTH // 2 - 150, 220, 300, 40), text="Enter Port",
+                       font_size=30, bg_color=WHITE, text_color=BLACK,
+                       border_color=BROWN, border_width=2)
+    back_button = Button(rect=(20, MENU_HEIGHT - 70, 150, 50), text="Go Back", bg_color=BROWN,
+                         text_color=WHITE, font_size=24, callback=None)
+    join_button = Button(rect=(MENU_WIDTH - 170, MENU_HEIGHT - 70, 150, 50), text="Join Game", bg_color=BROWN,
+                         text_color=WHITE, font_size=24, callback=None)
+    
+    ip_box.set_active(True)
+    active_box = ip_box
+
+    def attempt_join():
+        nonlocal error_message
+        ip_text = ip_box.get_text().strip()
+        port_text = port_box.get_text().strip()
+        if not ip_text or not port_text:
+            error_message = "IP and Port cannot be empty."
+            return None
+        try:
+            port = int(port_text)
+            if port < 1 or port > 65535:
+                error_message = "Port must be between 1 and 65535."
+                return None
+        except ValueError:
+            error_message = "Invalid port number."
+            return None
+        # Perform handshake check.
+        success, err = is_server_listening(ip_text, port)
+        if not success:
+            error_message = err
+            return None
+        return ip_text, port
+
+    font = pygame.font.SysFont("Arial", 20)
+    while True:
+        screen.fill(CREAM)
+        title = font.render("Join Game", True, BROWN)
+        screen.blit(title, (MENU_WIDTH // 2 - title.get_width() // 2, 40))
+        info = font.render("Click boxes or press [Tab] to switch, [Enter] to confirm", True, BROWN)
+        screen.blit(info, (MENU_WIDTH // 2 - info.get_width() // 2, 90))
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if ip_box.rect.collidepoint(event.pos):
+                    ip_box.set_active(True)
+                    port_box.set_active(False)
+                    active_box = ip_box
+                elif port_box.rect.collidepoint(event.pos):
+                    port_box.set_active(True)
+                    ip_box.set_active(False)
+                    active_box = port_box
+                elif back_button.rect.collidepoint(event.pos):
+                    return None  # Cancel join.
+                elif join_button.rect.collidepoint(event.pos):
+                    result = attempt_join()
+                    if result:
+                        return result
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_TAB:
+                    if active_box == ip_box:
+                        ip_box.set_active(False)
+                        port_box.set_active(True)
+                        active_box = port_box
+                    else:
+                        port_box.set_active(False)
+                        ip_box.set_active(True)
+                        active_box = ip_box
+                elif event.key == pygame.K_RETURN:
+                    result = attempt_join()
+                    if result:
+                        return result
+                elif event.key == pygame.K_BACKSPACE:
+                    active_box.remove_char()
+                else:
+                    active_box.add_char(event.unicode)
+        
+        ip_box.draw(screen, True)
+        port_box.draw(screen, True)
+        back_button.draw(screen)
+        join_button.draw(screen)
+        if error_message:
+            err_surface = font.render(error_message, True, (255, 0, 0))
+            screen.blit(err_surface, (MENU_WIDTH // 2 - err_surface.get_width() // 2, 300))
+        pygame.display.flip()
+        clock.tick(60)
+
+##############################################
+# GAME LOOP (with "Back to Menu" Button)
+##############################################
+def run_game(screen, server_ip, server_port):
+    # Resize window to game dimensions.
+    pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
+    screen = pygame.display.get_surface()  # Get updated display surface.
+    
+    clock = pygame.time.Clock()
+    assets = load_assets()
+    game_manager = ClientGameManager()
+    networking = ClientNetworking(server_ip, server_port)
     networking.add_receive_callback(lambda msg: game_manager.handle_update(msg))
     networking.start_receiving()
-
-    dragging_cookie = None
     
     # Create UI elements. Host (player 1) will see a button.
     start_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
@@ -66,14 +239,41 @@ def main():
     name_box = TextBox((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 50, 200, 40), "Enter Name")
     ip_box = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 275, 40), "Open IP Server: " + str(SERVER_IP))
     port_box = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 275, 40), "Open Port: " + str(SERVER_PORT))
+    dragging_cookie = None
 
+    # UI elements for game actions and to return to menu.
+    start_button = Button((GAME_WIDTH//2 - 100, GAME_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
+    reset_button = Button((GAME_WIDTH//2 - 100, GAME_HEIGHT//2 - 25, 200, 50), "Reset Game", (128, 0, 0))
+    back_button = Button((10, 10, 120, 40), "Menu", (200, 0, 0))
+    
+    # Helper functions used within the game loop.
+    def find_top_cookie(mouse_pos, cookies):
+        for cid in sorted([int(k) for k in cookies.keys()], reverse=True):
+            cookie = cookies[str(cid)]
+            pos = cookie.get("position", [0, 0])
+            radius = cookie.get("radius", 30)
+            dx = mouse_pos[0] - pos[0]
+            dy = mouse_pos[1] - pos[1]
+            if (dx * dx + dy * dy) ** 0.5 < radius:
+                return str(cid)
+        return None
 
+    def draw_status_text(screen, status_message):
+        font = pygame.font.SysFont(None, 48)
+        text_surface = font.render(status_message, True, BROWN)
+        text_rect = text_surface.get_rect(center=(GAME_WIDTH//2, GAME_HEIGHT//2))
+        screen.blit(text_surface, text_rect)
+    
     running = True
     while running: 
         current_mouse_pos = list(pygame.mouse.get_pos())
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                return False
+            if back_button.handle_event(event):
+                running = False
+                return True
 
             # ✅ KEYDOWN event for pressing "R"
             if event.type == pygame.KEYDOWN:
@@ -83,7 +283,6 @@ def main():
                         print("[DEBUG] Sent reset_game")
 
             if game_manager.game_state == GameState.LOBBY.value:
-                # Only allow host (player 1) to send the start_game command.
                 if game_manager.assigned_player_id == 1:
                     if start_button.handle_event(event):
                         networking.send_message({"type": "start_game"})
@@ -95,19 +294,16 @@ def main():
                 #    return "Menu"
                     
             elif game_manager.game_state == GameState.GAME_OVER.value:
-                # Only allow host to send reset_game command.
                 if game_manager.assigned_player_id == 1:
                     if reset_button.handle_event(event):
                         networking.send_message({"type": "reset_game"})
                         print("Reset game message sent")
             elif game_manager.game_state == GameState.PLAYING.value:
-                # Handle cookie dragging in PLAYING state.
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     dragging_cookie = find_top_cookie(current_mouse_pos, game_manager.cookies)
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     dragging_cookie = None
-
-        # Send unified update message every frame.
+        
         update_msg = {
             "type": "update",
             "position": current_mouse_pos,
@@ -128,6 +324,8 @@ def main():
             else:
                 #back_button.draw(screen)
                 draw_status_text(screen, "waiting for players")
+                ip_box.draw(screen)
+                port_box.draw(screen)
         # elif game_manager.game_state == GameState.GAME_OVER.value:
         #     if game_manager.assigned_player_id == 1:
         #         reset_button.draw(screen)
@@ -135,11 +333,43 @@ def main():
         #         draw_status_text(screen, "game ended - waiting for host")
         # In PLAYING state, no extra UI is needed; players see only the game.
         
+        back_button.draw(screen)
         pygame.display.flip()
         clock.tick(60)
-    
     networking.shutdown()
     pygame.quit()
+    return True
+
+##############################################
+# CENTRALIZED MAIN LOOP (within client)
+##############################################
+def main():
+    pygame.init()
+    # Set initial window to menu dimensions.
+    screen = pygame.display.set_mode((MENU_WIDTH, MENU_HEIGHT))
+    pygame.display.set_caption("Cookie Grabber - Client")
+    
+    while True:
+        menu_result = run_main_menu(screen)
+        if not menu_result:
+            break
+        mode, server_ip, server_port = menu_result
+        
+        # If starting the game, you might also want to launch the server.
+        # (The client code assumes that if you "start" you host on localhost.)
+        if mode == "start":
+            # You could optionally launch the server here.
+            server_thread = threading.Thread(target=lambda: __import__("server2").server_main.main(), daemon=True)
+            server_thread.start()
+        
+        # Run game loop (window resizes to game dimensions inside run_game).
+        back_to_menu = run_game(screen, server_ip, server_port)
+        if not back_to_menu:
+            break
+        # After game, reset window to menu size.
+        screen = pygame.display.set_mode((MENU_WIDTH, MENU_HEIGHT))
+    pygame.quit()
+    sys.exit()
 
 if __name__ == "__main__":
     main()
