@@ -6,3 +6,7 @@
 
 # Ignoring testing files
 karen_test.py
+
+# Ignoring Python bytecode files
+__pycache__/
+*.pyc
