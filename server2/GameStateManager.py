@@ -57,19 +57,23 @@ class GameStateManager:
                     udp_socket.sendto(json.dumps(alert_msg).encode(), addr)
                     return 
                 
-                # Allow up to 4 players.
-                if self.next_player_id <= 4:  
-                    player_id = self.next_player_id
-                    self.next_player_id += 1
-                    self.client_addresses[addr] = player_id
-                    plate_position = self.calculate_plate_position(player_id, SCREEN_WIDTH, SCREEN_HEIGHT)
-                    self.players[player_id] = Player(player_id, addr, plate_position, plate_radius=150)
-                    assign_msg = {"type": "assign_id", "player_id": player_id}
-                    udp_socket.sendto(json.dumps(assign_msg).encode(), addr)
-                    print(f"Registered new player {player_id} from {addr}")
-                else:
+                # Allow up to 4 players by finding a free id.
+                available_id = None
+                for i in range(1, 5):
+                    if i not in self.players:
+                        available_id = i
+                        break
+                if available_id is None:
                     udp_socket.sendto(json.dumps({"type": "server_full"}).encode(), addr)
                     return
+
+                player_id = available_id
+                self.client_addresses[addr] = player_id
+                plate_position = self.calculate_plate_position(player_id, SCREEN_WIDTH, SCREEN_HEIGHT)
+                self.players[player_id] = Player(player_id, addr, plate_position, plate_radius=150)
+                assign_msg = {"type": "assign_id", "player_id": player_id}
+                udp_socket.sendto(json.dumps(assign_msg).encode(), addr)
+                print(f"Registered new player {player_id} from {addr}")
 
             # Process update messages.
             if data_obj.get("type") == "update":
