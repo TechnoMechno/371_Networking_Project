@@ -247,7 +247,6 @@ def ip_input_screen(screen, auto_start=True):
         clock.tick(60)
 
 
-# run game - back to menu
 def run_game(screen, server_ip, server_port):
     # Resize window to game dimensions.
     pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
@@ -312,26 +311,35 @@ def run_game(screen, server_ip, server_port):
                     networking.send_message({"type": "shutdown"})
                     print("Sent shutdown signal to server")
                     time.sleep(0.5)  # Give time to send before disconnect
-                    running = False  # Only need to change running to false if server shuts down.
+                    running = False
                     return False
                 else:
                     print("QUIT event detected; sending quit message")
                     networking.send_message({"type": "quit"})
                     running = False
                     return False
+            
             if back_button.handle_event(event):
                 if game_manager.assigned_player_id == 1:
                     networking.send_message({"type": "shutdown"})
                     print("Sent shutdown signal to server")
-                    time.sleep(0.5)  # Give time to send before disconnect
-                    running = False  # Only need to change running to false if server shuts down.
-                else: # If the client is not also the server, then remove it from client addresses and stop rendering it's plate.
+                    time.sleep(0.5)
+                    running = False
+                else:
                     print("QUIT event detected; sending quit message")
                     networking.send_message({"type": "quit"})
                     return "Menu"
-
                 return True
 
+            # Check for key press events.
+            elif event.type == pygame.KEYDOWN:
+                # When host presses R during game over, reset the game.
+                if (event.key == pygame.K_r and 
+                    game_manager.game_state == GameState.GAME_OVER.value and 
+                    game_manager.assigned_player_id == 1):
+                    networking.send_message({"type": "reset_game"})
+                    print("Reset game message sent via keyboard")
+            
             if game_manager.game_state == GameState.LOBBY.value:
                 if game_manager.assigned_player_id == 1:
                     if start_button.handle_event(event):
@@ -341,7 +349,7 @@ def run_game(screen, server_ip, server_port):
                 if game_manager.assigned_player_id == 1:
                     if reset_button.handle_event(event):
                         networking.send_message({"type": "reset_game"})
-                        print("Reset game message sent")
+                        print("Reset game message sent via button")
             elif game_manager.game_state == GameState.PLAYING.value:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     dragging_cookie = find_top_cookie(current_mouse_pos, game_manager.cookies)
@@ -366,8 +374,6 @@ def run_game(screen, server_ip, server_port):
                 screen.blit(ip_text, ip_text_rect)
                 screen.blit(port_text, port_text_rect)
             else:
-                #ip_box_text.draw(screen)
-                #port_box_text.draw(screen)
                 draw_status_text(screen, "waiting for players")
         elif game_manager.game_state == GameState.GAME_OVER.value:
             if game_manager.assigned_player_id == 1:
@@ -380,6 +386,7 @@ def run_game(screen, server_ip, server_port):
     networking.shutdown()
     pygame.quit()
     return True
+
 
 # centralized loop within client
 def main():
