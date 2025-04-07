@@ -253,6 +253,8 @@ def run_game(screen, server_ip, server_port):
     start_button = Button((GAME_WIDTH//2 - 100, GAME_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
     reset_button = Button((GAME_WIDTH//2 - 63, GAME_HEIGHT//1.65 - 25, 120, 35), "Reset", (128, 0, 0))
     back_button = Button((10, 10, 120, 40), "Menu", (200, 0, 0))
+    ip_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 275, 40), "Open IP Server: 127.0.0.1")
+    port_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 275, 40), "Open Port: 55555" )
     
     # Helper functions used within the game loop.
     def find_top_cookie(mouse_pos, cookies):
@@ -314,7 +316,11 @@ def run_game(screen, server_ip, server_port):
         if game_manager.game_state == GameState.LOBBY.value:
             if game_manager.assigned_player_id == 1:
                 start_button.draw(screen)
+                ip_box_text.draw(screen)
+                port_box_text.draw(screen)
             else:
+                ip_box_text.draw(screen)
+                port_box_text.draw(screen)
                 draw_status_text(screen, "waiting for players")
         elif game_manager.game_state == GameState.GAME_OVER.value:
             if game_manager.assigned_player_id == 1:
