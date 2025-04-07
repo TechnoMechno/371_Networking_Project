@@ -117,10 +117,23 @@ def run_main_menu(screen, default_host=False):
             server_ip, server_port = result
     else:
         # For "start", assume hosting on localhost.
-        server_ip, server_port = "127.0.0.1", 55555
+        server_ip, server_port = get_local_ip(), 55555
     return mode_selection, server_ip, server_port, mode_selection == "start"
 
-
+def get_local_ip():
+    """Get the local IP address of this machine that other devices can connect to"""
+    try:
+        # Create a socket that connects to an external server
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Doesn't connect, sets up the socket
+        s.connect(("8.8.8.8", 80))
+        # Get the local IP address being used for this connection
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception:
+        # Fallback to localhost if we can't determine the IP
+        return "127.0.0.1"
 
 # input screen to join
 def ip_input_screen(screen, auto_start=True):
@@ -253,8 +266,8 @@ def run_game(screen, server_ip, server_port):
     start_button = Button((GAME_WIDTH//2 - 100, GAME_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
     reset_button = Button((GAME_WIDTH//2 - 63, GAME_HEIGHT//1.65 - 25, 120, 35), "Reset", (128, 0, 0))
     back_button = Button((400, 10, 140, 40), "Back To Menu", (200, 0, 0))
-    ip_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 350, 40), "Open IP Server (Connect): " + str(server_ip))
-    port_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 350, 40), "Open Port: " + str(server_port))
+    ip_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 385, 40), "Open IP Server (Connect): " + str(server_ip))
+    port_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 385, 40), "Open Port: " + str(server_port))
     
     # Helper functions used within the game loop.
     def find_top_cookie(mouse_pos, cookies):
