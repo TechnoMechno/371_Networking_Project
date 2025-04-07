@@ -148,7 +148,7 @@ def ip_input_screen(screen, auto_start=True):
                          text_color=WHITE, font_size=24, callback=None)
     join_button = Button(rect=(MENU_WIDTH - 170, MENU_HEIGHT - 70, 150, 50), text="Join Game", bg_color=BROWN,
                          text_color=WHITE, font_size=24, callback=None)
-    
+
     ip_box.set_active(True)
     active_box = ip_box
 
@@ -265,7 +265,10 @@ def run_game(screen, server_ip, server_port):
     start_button = Button((GAME_WIDTH//2 - 100, GAME_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
     reset_button = Button((GAME_WIDTH//2 - 63, GAME_HEIGHT//1.65 - 25, 120, 35), "Reset", (128, 0, 0))
     back_button = Button((GAME_WIDTH//2 - 90, GAME_HEIGHT - 50, 180, 40), "Back To Menu", (200, 0, 0))
-
+    waiting_for_players_text = TextBox((583,659,200,50), "Waiting For Players", 
+                    font_size=24, text_color=(0,0,0),
+                    bg_color=(255, 245, 211),placeholder_color=(255, 0, 0), 
+                    border_color=(255, 245, 211), border_width=0)
     pygame.font.init()
     font = pygame.font.SysFont("Arial", 20)
 
@@ -373,7 +376,9 @@ def run_game(screen, server_ip, server_port):
                 pygame.draw.rect(screen, BLACK, port_rect, 2)
                 screen.blit(ip_text, ip_text_rect)
                 screen.blit(port_text, port_text_rect)
+                waiting_for_players_text.draw(screen)
             else:
+                waiting_for_players_text.draw(screen)
                 draw_status_text(screen, "waiting for players")
         elif game_manager.game_state == GameState.GAME_OVER.value:
             if game_manager.assigned_player_id == 1:
