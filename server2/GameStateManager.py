@@ -190,12 +190,23 @@ class GameStateManager:
         print("Transition: GAME_OVER -> LOBBY")
 
     def handle_player_disconnect(self, addr):
-        print("enter handle")
         with self.lock:
-            print("with self lock")
             if addr in self.client_addresses:
-                print("addr in client_addresses")
                 player_id = self.client_addresses.pop(addr)
+                
+                # Identify player's plate object (if it exists)
+                player_plate = None
+                if player_id in self.players:
+                    player_plate = self.players[player_id].plate
+                
+
+                # Revert any cookies on that player's plate to their initial position.
+                if player_plate:
+                    for cookie in self.cookies.values():
+                        if cookie.on_plate == player_plate:
+                            cookie.on_plate = None
+                            cookie.update_position(cookie.original_position)
+                        
                 if player_id in self.players:
                     del self.players[player_id]
                 print(f"Player {player_id} disconnected.")
