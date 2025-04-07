@@ -103,7 +103,7 @@ def render(screen, game_state, assets, assigned_player_id, reset_button):
     # Render central plate.
     draw_central_plate(screen, game_state.central_plate, plate_img)
     
-     # Render players' plates.
+     # Render players' plates and outline
     for pid, player in game_state.players.items():
         plate_data = player.get("plate")
         if plate_data:
@@ -112,6 +112,10 @@ def render(screen, game_state, assets, assigned_player_id, reset_button):
             scaled_plate = pygame.transform.scale(plate_img, (radius * 2, radius * 2))
             rect = scaled_plate.get_rect(center=(int(pos[0]), int(pos[1])))
             screen.blit(scaled_plate, rect)
+            # draw outline of the local player
+            if str(pid) == str(assigned_player_id):
+                player_color = tuple(player.get("color", [255, 255, 255]))
+                pygame.draw.circle(screen, player_color, (int(pos[0]), int(pos[1])), radius, 7)
 
     # Render cookies.
     for cid, cookie in game_state.cookies.items():
@@ -121,12 +125,11 @@ def render(screen, game_state, assets, assigned_player_id, reset_button):
         rect = img.get_rect(center=(int(pos[0]), int(pos[1])))
         screen.blit(img, rect)
     
-    # Render player cursors.
+    # Render player cursors using their color.
     for pid, player in game_state.players.items():
         pos = player.get("mouse_pos", [0, 0])
-        # Highlight the assigned player's cursor in red; others in green.
-        color = (255, 0, 0) if str(pid) == str(assigned_player_id) else (0, 255, 0)
-        pygame.draw.circle(screen, color, (int(pos[0]), int(pos[1])), 5)
+        player_color = tuple(player.get("color", [255, 255, 255]))  # Use the player's color
+        pygame.draw.circle(screen, player_color, (int(pos[0]), int(pos[1])), 5)
     
     # Render the scoreboard if available.
     if hasattr(game_state, "scoreboard") and game_state.scoreboard:

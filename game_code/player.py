@@ -1,5 +1,13 @@
 # TEST CODE player.py
 from game_code.Plate import Plate
+
+PLAYER_COLORS = [
+    (255, 0, 0),   # Red for Player 1
+    (0, 255, 0),   # Green for Player 2
+    (0, 0, 255),   # Blue for Player 3
+    (255, 165, 0)  # Yellow for Player 4
+]
+
 class Player:
     def __init__(self, player_id, address, plate_position, plate_radius, ):
         self.player_id = player_id            # Unique player ID
@@ -10,6 +18,7 @@ class Player:
         self.dragging_cookie = None           # Currently dragged cookie (if any)
         # Build the player's plate inside the Player object
         self.plate = Plate(plate_position, plate_radius)
+        self.color = PLAYER_COLORS[(player_id - 1) % len(PLAYER_COLORS)]
 
     def to_dict(self):
         """
@@ -23,6 +32,7 @@ class Player:
             "dragging_cookie": self.dragging_cookie,
             # Don't include 'address' unless you really need it
             # "address": self.address,
+            "color": self.color  # Color as an RGB tuple, e.g., [255, 0, 0]
         }
 
         # Include plate only if it exists
