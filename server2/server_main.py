@@ -55,7 +55,8 @@ def receive_and_handle_messages(udp_socket, game_manager):
             print("Receive error:", e)
 
 def main():
-    global server_running 
+    global server_running
+    server_running = True
     # Create the UDP socket and bind it.
     udp_socket = create_udp_socket(HOST, UDP_PORT)
     
