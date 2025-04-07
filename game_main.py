@@ -252,7 +252,7 @@ def run_game(screen, server_ip, server_port):
     # UI elements for game actions and to return to menu.
     start_button = Button((GAME_WIDTH//2 - 100, GAME_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
     reset_button = Button((GAME_WIDTH//2 - 63, GAME_HEIGHT//1.65 - 25, 120, 35), "Reset", (128, 0, 0))
-    back_button = Button((10, 10, 120, 40), "Menu", (200, 0, 0))
+    back_button = Button((400, 10, 140, 40), "Back To Menu", (200, 0, 0))
     ip_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 275, 40), "Open IP Server: 127.0.0.1")
     port_box_text = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 275, 40), "Open Port: 55555" )
     
