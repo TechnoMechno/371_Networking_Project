@@ -30,6 +30,6 @@ class ClientGameManager:
             self.players = msg.get("players", {})
             self.game_state = msg.get("game_state")
             self.scoreboard = msg.get("scoreboard", {})
-        elif msg_type == "server_shutdown":
+        elif msg_type == "shutdown":
             self.server_shutdown = True
             
