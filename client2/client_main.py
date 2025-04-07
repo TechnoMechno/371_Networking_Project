@@ -233,6 +233,12 @@ def run_game(screen, server_ip, server_port):
     networking.add_receive_callback(lambda msg: game_manager.handle_update(msg))
     networking.start_receiving()
     
+    # Create UI elements. Host (player 1) will see a button.
+    start_button = Button((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 25, 200, 50), "Start Game", (0, 128, 0))
+    reset_button = Button((SCREEN_WIDTH//2 - 65, SCREEN_HEIGHT//1.7, 120, 35), "Restart", (0, 0, 0))
+    name_box = TextBox((SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 50, 200, 40), "Enter Name")
+    ip_box = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 375, 275, 40), "Open IP Server: " + str(SERVER_IP))
+    port_box = TextBox((SCREEN_WIDTH//2 - 130, SCREEN_HEIGHT//2 - 325, 275, 40), "Open Port: " + str(SERVER_PORT))
     dragging_cookie = None
 
     # UI elements for game actions and to return to menu.
@@ -282,10 +288,10 @@ def run_game(screen, server_ip, server_port):
                         networking.send_message({"type": "start_game"})
                         print("Start game message sent")
                 # Send a message to main to return to the main menu
-                if back_button.handle_event(event):
-                    print("Returning to Menu")
-                    networking.shutdown() # Clean up the networking stuff before going back to main menu
-                    return "Menu"
+                #if back_button.handle_event(event):
+                #    print("Returning to Menu")
+                #    networking.shutdown() # Clean up the networking stuff before going back to main menu
+                #    return "Menu"
                     
             elif game_manager.game_state == GameState.GAME_OVER.value:
                 if game_manager.assigned_player_id == 1:
@@ -312,11 +318,11 @@ def run_game(screen, server_ip, server_port):
         if game_manager.game_state == GameState.LOBBY.value:
             if game_manager.assigned_player_id == 1:
                 start_button.draw(screen)
-                back_button.draw(screen)
+                #back_button.draw(screen)
                 ip_box.draw(screen)
                 port_box.draw(screen)
             else:
-                back_button.draw(screen)
+                #back_button.draw(screen)
                 draw_status_text(screen, "waiting for players")
                 ip_box.draw(screen)
                 port_box.draw(screen)
@@ -325,6 +331,8 @@ def run_game(screen, server_ip, server_port):
         #         reset_button.draw(screen)
         #     else:
         #         draw_status_text(screen, "game ended - waiting for host")
+        # In PLAYING state, no extra UI is needed; players see only the game.
+        
         back_button.draw(screen)
         pygame.display.flip()
         clock.tick(60)

@@ -11,6 +11,8 @@ from game_code.config import HOST, UDP_PORT  # e.g., HOST = "127.0.0.1", UDP_POR
 from server2.networking import create_udp_socket, broadcast_udp
 from server2.GameStateManager import GameStateManager
 
+server_running = True
+
 def receive_and_handle_messages(udp_socket, game_manager):
     """
     Continuously receives UDP messages.
@@ -18,7 +20,8 @@ def receive_and_handle_messages(udp_socket, game_manager):
     otherwise, it sends a JSON error if the game is already in session.
     Other messages are passed to game_manager.handle_message.
     """
-    while True:
+    global server_running 
+    while server_running:
         try:
             data, addr = udp_socket.recvfrom(4096)
             message = data.decode().strip()
@@ -35,6 +38,16 @@ def receive_and_handle_messages(udp_socket, game_manager):
                         udp_socket.sendto("PONG".encode(), addr)
                 continue  # Skip normal message processing.
             else:
+                try:
+                    msg_obj = json.loads(message)
+                    if msg_obj.get("type") == "shutdown":
+                        print("Shutdown signal received from host.")
+                        # global server_running
+                        server_running = False
+                        break
+                except json.JSONDecodeError:
+                    pass
+
                 game_manager.handle_message(message, addr, udp_socket)
         except socket.timeout:
             continue
@@ -42,6 +55,7 @@ def receive_and_handle_messages(udp_socket, game_manager):
             print("Receive error:", e)
 
 def main():
+    global server_running 
     # Create the UDP socket and bind it.
     udp_socket = create_udp_socket(HOST, UDP_PORT)
     
@@ -54,7 +68,7 @@ def main():
     
     # Main loop: update state and broadcast game state to all connected clients.
     try:
-        while True:
+        while server_running:
             game_manager.update_state_transitions()
             data = game_manager.get_game_data()
             message = json.dumps(data)
@@ -64,6 +78,7 @@ def main():
     except KeyboardInterrupt:
         print("Server shutting down.")
     finally:
+        print("Closing server socket.")
         udp_socket.close()
 
 if __name__ == "__main__":
