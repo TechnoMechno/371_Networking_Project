@@ -28,21 +28,55 @@ def draw_central_plate(screen, central_plate, plate_img):
 
 def draw_scoreboard(screen, scoreboard):
     """
-    Draws the scoreboard on the screen.
-    Each entry in the scoreboard dictionary should contain:
-      - "player": a label (e.g., "Player 1")
-      - "score": the player's score
-      - "position": a dict with 'x' and 'y' for where to draw the text.
+    Draws the scoreboard in each corner of the screen with a themed background.
+    Each player is assigned to one of the four corners:
+      - Top-left, Top-right, Bottom-left, Bottom-right.
     """
-    # Initialize a font object
-    font = pygame.font.SysFont(None, 36)
-    for key, data in scoreboard.items():
-        # Construct the score text
-        text = f"{data['player']}, Score: {data['score']}"
-        # Use the provided coordinates from scoreboard data
-        pos = data['position']
-        text_surface = font.render(text, True, BROWN)
-        screen.blit(text_surface, (pos["x"], pos["y"]))
+    # Define corner positions with a little margin from the edges.
+    corners = [
+        (20, 20),  # top-left
+        (SCREEN_WIDTH - 20, 20),  # top-right
+        (20, SCREEN_HEIGHT - 20),  # bottom-left
+        (SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20)  # bottom-right
+    ]
+    
+    # Use a themed font (for example, bold Arial) and color for the text.
+    font = pygame.font.SysFont('Arial', 24, bold=True)
+    
+    # Iterate over scoreboard items sorted by their key.
+    # This example assumes a maximum of 4 players.
+    for i, (pid, data) in enumerate(sorted(scoreboard.items(), key=lambda item: item[0])):
+        if i < 4:
+            # Pick the corner for this player.
+            pos = corners[i]
+            text = f"{data['player']}: {data['score']}"
+            text_surface = font.render(text, True, BLACK)
+            text_rect = text_surface.get_rect()
+            
+            # Align text based on the corner:
+            if i == 0:       # Top-left
+                text_rect.topleft = pos
+            elif i == 1:     # Top-right
+                text_rect.topright = pos
+            elif i == 2:     # Bottom-left
+                text_rect.bottomleft = pos
+            elif i == 3:     # Bottom-right
+                text_rect.bottomright = pos
+            
+            # Create a background rectangle behind the text with some padding.
+            padding = 8
+            bg_rect = pygame.Rect(
+                text_rect.left - padding, 
+                text_rect.top - padding, 
+                text_rect.width + 2 * padding, 
+                text_rect.height + 2 * padding
+            )
+            pygame.draw.rect(screen, CREAM, bg_rect)
+            pygame.draw.rect(screen, BROWN, bg_rect, 2)
+            
+            # Finally, draw the text over the background.
+            screen.blit(text_surface, text_rect)
+
 
 def draw_end_scoreboard(self):
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
