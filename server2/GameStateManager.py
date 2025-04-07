@@ -35,7 +35,7 @@ class GameStateManager:
             y = self.central_plate.position[1] + r * math.sin(theta)
             
             cookie_type = "star" if i % 2 == 0 else "regular"
-            self.cookies[i] = Cookie(cookie_id=i, position=[x, y])
+            self.cookies[i] = Cookie(cookie_id=i, position=[x, y], type=cookie_type)
 
     def handle_message(self, message, addr, udp_socket):
         """
@@ -184,7 +184,7 @@ class GameStateManager:
             x = self.central_plate.position[0] + r * math.cos(theta)
             y = self.central_plate.position[1] + r * math.sin(theta)
             cookie_type = "star" if i % 2 == 0 else "regular"
-            self.cookies[i] = Cookie(cookie_id=i, position=[x, y])
+            self.cookies[i] = Cookie(cookie_id=i, position=[x, y], type=cookie_type)
         self.game_state = GameState.LOBBY
         self.reset_game_flag = False
         print("Transition: GAME_OVER -> LOBBY")
