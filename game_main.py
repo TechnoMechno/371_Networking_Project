@@ -274,7 +274,7 @@ def run_game(screen, server_ip, server_port):
         for cid in sorted([int(k) for k in cookies.keys()], reverse=True):
             cookie = cookies[str(cid)]
             pos = cookie.get("position", [0, 0])
-            radius = cookie.get("radius", 30)
+            radius = cookie.get("radius")
             dx = mouse_pos[0] - pos[0]
             dy = mouse_pos[1] - pos[1]
             if (dx * dx + dy * dy) ** 0.5 < radius:
