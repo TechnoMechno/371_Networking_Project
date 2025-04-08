@@ -299,15 +299,16 @@ def run_game(screen, server_ip, server_port):
         text_surface = font.render(status_message, True, BROWN)
         text_rect = text_surface.get_rect(center=(GAME_WIDTH//2, GAME_HEIGHT//2))
         screen.blit(text_surface, text_rect)
-    
+    # while loop that runs the game
     running = True
     while running:
         current_mouse_pos = list(pygame.mouse.get_pos())
-
+        # if game is returning to menu, shut down server and end game loop.
         if hasattr(game_manager, 'server_shutdown') and game_manager.server_shutdown:
             print("Server has shut down, returning to menu")
             running = False
             return True
+        # for loop running through all the events.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 if game_manager.assigned_player_id == 1:
