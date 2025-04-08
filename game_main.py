@@ -19,7 +19,7 @@ from server2 import server_main
 MENU_WIDTH, MENU_HEIGHT = 600, 400
 GAME_WIDTH, GAME_HEIGHT = SCREEN_WIDTH, SCREEN_HEIGHT
 
-# handshake function for udp
+# Function to check whether there is a server listening given the IP and port.
 def is_server_listening(ip_address, port):
     """
     Send a UDP 'JOIN_CHECK' message to the server and expect:
@@ -49,9 +49,7 @@ def is_server_listening(ip_address, port):
     finally:
         sock.close()
 
-##############################################
-# MAIN MENU (IN CLIENT)
-##############################################
+# Run the main menu screen in client
 def run_main_menu(screen, default_host=False):
     mode_selection = None
 
@@ -134,7 +132,7 @@ def get_local_ip():
         # Fallback to localhost if we can't determine the IP
         return "127.0.0.1"
 
-# input screen to join
+# Input screen for IP and port for users to attempt to join a game.
 def ip_input_screen(screen, auto_start=True):
     clock = pygame.time.Clock()
     error_message = None
@@ -152,6 +150,8 @@ def ip_input_screen(screen, auto_start=True):
     ip_box.set_active(True)
     active_box = ip_box
 
+
+    # Checks whether the entered IP address and port are valid.
     def attempt_join():
         nonlocal error_message
         ip_text = ip_box.get_text().strip()
@@ -246,7 +246,7 @@ def ip_input_screen(screen, auto_start=True):
         pygame.display.flip()
         clock.tick(60)
 
-
+# Main game loop for the client.
 def run_game(screen, server_ip, server_port):
     # Resize window to game dimensions.
     pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))

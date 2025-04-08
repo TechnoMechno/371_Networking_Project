@@ -146,7 +146,6 @@ class GameStateManager:
     def get_game_data(self):
         """
         Returns the full game state as a dictionary for broadcasting.
-        This now includes a 'scoreboard' entry with each player's score and its designated corner position.
         """
         # print(json.dumps(state, indent=2))
 
@@ -161,10 +160,12 @@ class GameStateManager:
             }
         return state
 
+    # Gets all the client addresses that are connected to the server in order to send messages to them.
     def get_all_client_addresses(self):
         with self.lock:
             return list(self.client_addresses.keys())
 
+    # Update the game states based on the current game state and player actions.
     def update_state_transitions(self):
         if self.game_state == GameState.LOBBY:
             if getattr(self, 'start_game_flag', False) and len(self.players) >= 1:
@@ -180,6 +181,7 @@ class GameStateManager:
             if getattr(self, 'reset_game_flag', False):
                 self.reset_game()
     
+    # When user has restarted the game, reset the game state and the player scores.
     def reset_game(self):
         for player in self.players.values():
             player.score = 0
@@ -196,6 +198,7 @@ class GameStateManager:
         self.reset_game_flag = False
         print("Transition: GAME_OVER -> LOBBY")
 
+    # If a player disconnects, remove them from the game state and also revert the cookies.
     def handle_player_disconnect(self, addr):
         with self.lock:
             if addr in self.client_addresses:
