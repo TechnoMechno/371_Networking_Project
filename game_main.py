@@ -136,6 +136,8 @@ def get_local_ip():
 def ip_input_screen(screen, auto_start=True):
     clock = pygame.time.Clock()
     error_message = None
+    
+    #Creating text boxes and buttons
     ip_box = TextBox(rect=(MENU_WIDTH // 2 - 150, 160, 300, 40), text="Enter IP",
                      font_size=30, bg_color=WHITE, text_color=BLACK,
                      border_color=BROWN, border_width=2)
