@@ -12,7 +12,7 @@ class ClientNetworking:
         self.server_ip = server_ip
         self.server_port = server_port
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-       self.udp_socket.connect((server_ip, server_port))
+        self.udp_socket.connect((server_ip, server_port))
         self.udp_socket.setblocking(False)
         self.client_running = True
         self.receive_callbacks = []
