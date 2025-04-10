@@ -22,29 +22,4 @@ def broadcast_udp(sock, message, client_addresses):
         except Exception as e:
             print(f"Error broadcasting to {addr}: {e}")
 
-def receive_messages(sock, game_manager):
-    """
-    Continuously receives messages on the UDP socket.
-    For "JOIN_CHECK" messages, responds with "PONG" (or a JSON error if not allowed).
-    Other messages are passed to game_manager.handle_message.
-    """
-    while True:
-        try:
-            data, addr = sock.recvfrom(4096)
-            message = data.decode().strip()
-            if message == "JOIN_CHECK":
-                with game_manager.lock:
-                    if addr not in game_manager.client_addresses and game_manager.game_state != GameState.LOBBY:
-                        response = json.dumps({
-                            "type": "game_in_session",
-                            "message": "Game is already in session. Cannot join."
-                        })
-                        sock.sendto(response.encode(), addr)
-                    else:
-                        sock.sendto("PONG".encode(), addr)
-                continue
-            game_manager.handle_message(message, addr, sock)
-        except socket.timeout:
-            continue
-        except Exception as e:
-            print("Receive error:", e)
+
