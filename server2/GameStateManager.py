@@ -81,6 +81,7 @@ class GameStateManager:
                 self.players[player_id].mouse_pos = data_obj.get("position", self.players[player_id].mouse_pos)
                 dragged = data_obj.get("dragged_cookie")
                 
+                # If no cookie is dragged, check if any cookie is locked by the player.
                 if dragged is None:
                     for cookie in self.cookies.values():
                         if cookie.locked_by == player_id:
@@ -94,7 +95,7 @@ class GameStateManager:
                                 cookie.update_position(cookie.original_position)
                             cookie.locked_by = None
                 else:
-                    dragged = int(dragged)
+                    dragged = int(dragged) # Get the dragged cookie's ID.
                     cookie = self.cookies.get(dragged)
                     if cookie:
                         if cookie.on_plate is None:

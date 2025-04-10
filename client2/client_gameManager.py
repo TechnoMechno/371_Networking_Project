@@ -8,6 +8,7 @@ from game_code.Plate import Plate
 
 
 class ClientGameManager:
+    #Initializes Game state for cookies, players, object positions, and game state.
     def __init__(self):
         self.cookies = {}   # e.g., {"0": {...}, "1": {...}, ...}
         self.players = {}   # e.g., {"1": {...}, "2": {...}, ...}
@@ -20,6 +21,7 @@ class ClientGameManager:
         self.start_game_flag = False
         self.reset_game_flag = False
     
+    #Handles updates for the state of the game, like cookies, players, and scores
     def handle_update(self, msg):
         msg_type = msg.get("type", "")
         if msg_type == "assign_id":

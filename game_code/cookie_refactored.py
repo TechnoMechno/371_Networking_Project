@@ -73,6 +73,7 @@ class Cookie:
         dy = self.position[1] - central_plate.y
         return math.hypot(dx, dy) < central_plate.radius
     
+    # Converts a cookie object into a python dictionary 
     def to_dict(self):
         return {
             "cookie_id": self.cookie_id,
