@@ -18,9 +18,7 @@ from TextBox import TextBox
 MENU_WIDTH, MENU_HEIGHT = 600, 400
 GAME_WIDTH, GAME_HEIGHT = SCREEN_WIDTH, SCREEN_HEIGHT
 
-##############################################
 # HANDSHAKE FUNCTION (PING / PONG)
-##############################################
 def is_server_listening(ip_address, port):
     """
     Send a UDP 'JOIN_CHECK' message to the server and expect:
@@ -29,7 +27,7 @@ def is_server_listening(ip_address, port):
     """
     test_message = "JOIN_CHECK"
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.settimeout(1)  # 1-second timeout for response
+    sock.settimeout(1)  # 1 second timeout
     try:
         sock.sendto(test_message.encode(), (ip_address, port))
         data, addr = sock.recvfrom(1024)
@@ -50,9 +48,7 @@ def is_server_listening(ip_address, port):
     finally:
         sock.close()
 
-##############################################
 # MAIN MENU (IN CLIENT)
-##############################################
 def run_main_menu(screen):
     mode_selection = None
 
@@ -72,6 +68,8 @@ def run_main_menu(screen):
     except pygame.error:
         cookie_img = None
     cookie_positions = []
+
+    # Add cookie images in the background
     if cookie_img:
         cookie_positions = [
             (30, 30),
@@ -120,9 +118,8 @@ def run_main_menu(screen):
         server_ip, server_port = "127.0.0.1", 55555
     return mode_selection, server_ip, server_port
 
-##############################################
+
 # IP INPUT SCREEN (for JOIN mode)
-##############################################
 def ip_input_screen(screen):
     clock = pygame.time.Clock()
     error_message = None
@@ -219,9 +216,7 @@ def ip_input_screen(screen):
         clock.tick(60)
 
 
-##############################################
 # CENTRALIZED MAIN LOOP (within client)
-##############################################
 def main():
     pygame.init()
     # Set initial window to menu dimensions.
@@ -234,10 +229,8 @@ def main():
             break
         mode, server_ip, server_port = menu_result
         
-        # If starting the game, you might also want to launch the server.
-        # (The client code assumes that if you "start" you host on localhost.)
+        # tarting the game also launches the server.
         if mode == "start":
-            # You could optionally launch the server here.
             server_thread = threading.Thread(target=lambda: __import__("server2").server_main.main(), daemon=True)
             server_thread.start()
         

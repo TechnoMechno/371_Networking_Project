@@ -51,20 +51,6 @@ def receive_and_handle_messages(udp_socket, game_manager):
                         # global server_running
                         server_running = False
                         break
-                    # Receive messages from the game if client wants to shut down and handle it.
-                    # elif msg_obj.get("type") == "2nd_shutdown":
-                    #     print("Shutdown signal received from 2nd client.")
-                    #     del game_manager.client_addresses[2]
-                    # elif msg_obj.get("type") == "3rd_shutdown":
-                    #     print("Shutdown signal received from 3rd client.")
-                    #     del game_manager.client_addresses[3]
-                    # elif msg_obj.get("type") == "4th_shutdown":
-                    #     print("Shutdown signal received from 4th client.")
-                    #     del game_manager.client_addresses[4]
-                    # elif msg_obj.get("type") == "player_disconnect":
-                    #     player_id = msg_obj.get("player_id")
-                    #     print(f"Disconnect signal received from player {player_id}")
-                    #     game_manager.handle_player_disconnect(player_id)
                 except json.JSONDecodeError:
                     pass
 
