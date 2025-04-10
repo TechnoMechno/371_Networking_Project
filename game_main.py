@@ -343,18 +343,21 @@ def run_game(screen, server_ip, server_port):
                     game_manager.assigned_player_id == 1):
                     networking.send_message({"type": "reset_game"})
                     print("Reset game message sent via keyboard")
-            
+
             if game_manager.game_state == GameState.LOBBY.value:
+                # LOBBY state: Only host can send start_game.
                 if game_manager.assigned_player_id == 1:
                     if start_button.handle_event(event):
                         networking.send_message({"type": "start_game"})
                         print("Start game message sent")
             elif game_manager.game_state == GameState.GAME_OVER.value:
+                # GAME_OVER state: Only host can reset the game.
                 if game_manager.assigned_player_id == 1:
                     if reset_button.handle_event(event):
                         networking.send_message({"type": "reset_game"})
                         print("Reset game message sent via button")
             elif game_manager.game_state == GameState.PLAYING.value:
+                # PLAYING state: Click to drag cookie on MOUSEBUTTONDOWN and release on MOUSEBUTTONUP.
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     dragging_cookie = find_top_cookie(current_mouse_pos, game_manager.cookies)
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
