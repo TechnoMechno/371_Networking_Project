@@ -8,7 +8,7 @@ class Cookie:
         self.cookie_id = cookie_id
         self.position = list(position)
         self.type = type
-        self.locked_by = None  # No one is dragging this cookie initially
+        self.locked_by = None  # player_id of the player currently pressing on the cookie 
         self.offset = [0, 0]
         self.on_plate = None
         self.original_position = list(position)
