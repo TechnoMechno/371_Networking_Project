@@ -62,6 +62,7 @@ def run_main_menu(screen, default_host=False):
     
     title_font = pygame.font.SysFont("comicsansms", 64)
     
+    #...
     # Attempt to load a background cookie image.
     try:
         cookie_img = pygame.image.load("Assets/cookie.png").convert_alpha()
@@ -136,7 +137,7 @@ def get_local_ip():
 def ip_input_screen(screen, auto_start=True):
     clock = pygame.time.Clock()
     error_message = None
-    
+
     #Creating text boxes and buttons
     ip_box = TextBox(rect=(MENU_WIDTH // 2 - 150, 160, 300, 40), text="Enter IP",
                      font_size=30, bg_color=WHITE, text_color=BLACK,
