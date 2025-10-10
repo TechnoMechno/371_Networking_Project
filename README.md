@@ -14,7 +14,13 @@
 
 ## 🎬 Demo
 
-https://github.com/TechnoMechno/371_Networking_Project/assets/demo_video.mp4
+<div align="center">
+
+https://github.com/user-attachments/assets/demo_video.mp4
+
+*Watch players compete in real-time to grab the most cookies!*
+
+</div>
 
 ---
 
@@ -141,11 +147,3 @@ python game_main.py
 This project is open source and available for educational purposes.
 
 ---
-
-<div align="center">
-
-**Built with ❤️ for COMP 371 - Networking Fundamentals**
-
-*If you found this project interesting, please give it a ⭐!*
-
-</div>
