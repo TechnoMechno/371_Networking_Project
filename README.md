@@ -16,7 +16,7 @@
 
 <div align="center">
 
-https://github.com/user-attachments/assets/demo_video.mp4
+![Cookie Grabber Gameplay](demo_video.gif)
 
 *Watch players compete in real-time to grab the most cookies!*
 
