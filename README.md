@@ -20,6 +20,8 @@
 
 *Watch players compete in real-time to grab the most cookies!*
 
+### 📺 [Watch Full Demo on YouTube](https://www.youtube.com/watch?v=yPCTIHWoaqg)
+
 </div>
 
 ---
